@@ -1,0 +1,8 @@
+^datablinder\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^CLAUDE\.md$
+^SPEC\.md$
+^\.claude$
+(^|/)\.DS_Store$
+^LICENSE\.md$

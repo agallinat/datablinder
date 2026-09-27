@@ -1,0 +1,5 @@
+id,age,score,sex,visit_date,notes
+P-000001,34,12.5,M,2021-03-04,first visit
+P-000002,,9.75,F,2021-03-05,
+P-000003,51,10.2,M,2021-04-11,follow up
+P-000004,29,8.4,F,,missing date

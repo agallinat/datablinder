@@ -1,0 +1,21 @@
+#!/usr/bin/env Rscript
+
+# Blind a data file from the command line: "datablinder --help" says how.
+# The README explains how to put this script on the PATH; the one-off
+# alternative is Rscript -e 'datablinder::blind_file("patients.csv")'.
+#
+# Everything the wrapper does lives in the package, in R/cli.R, so that it can
+# be tested. This file only finds it and reports the exit status.
+
+if (!requireNamespace("datablinder", quietly = TRUE)) {
+  cat(
+    "The datablinder package is not installed, or not in the library this\n",
+    "Rscript uses. Install it with:\n",
+    "  Rscript -e 'install.packages(\"datablinder\")'\n",
+    file = stderr(), sep = ""
+  )
+  quit(save = "no", status = 1L)
+}
+
+status <- datablinder:::db_cli(commandArgs(trailingOnly = TRUE))
+quit(save = "no", status = status)

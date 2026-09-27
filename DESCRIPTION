@@ -1,0 +1,29 @@
+Package: datablinder
+Title: Blinded Copies of Sensitive Data Files
+Version: 0.0.0.9000
+Authors@R:
+    person("Alex", role = c("aut", "cre"), email = "baloo.142@gmail.com")
+Description: Turns a sensitive data file into a blinded copy with the same
+    columns, classes and file format but fake values, so that analysis code
+    can be written against it and then run unchanged on the real data.
+    Reduces disclosure risk; it offers no formal privacy guarantee.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends:
+    R (>= 4.1)
+Imports:
+    bslib,
+    data.table,
+    haven,
+    readxl,
+    shiny,
+    stats,
+    utils,
+    writexl
+Suggests:
+    arrow,
+    testthat (>= 3.0.0),
+    tibble
+Config/testthat/edition: 3

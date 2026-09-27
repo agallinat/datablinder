@@ -1,0 +1,4 @@
+Name: Blind a data file
+Description: Open the datablinder app to turn a data file into a blinded copy with fake values.
+Binding: run_app
+Interactive: true
