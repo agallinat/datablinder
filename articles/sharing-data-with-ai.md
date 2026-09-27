@@ -51,7 +51,7 @@ text, an identifier blinded as a category. Those are the cases to catch.
 ``` r
 
 summary
-#> Blinded copy written to /tmp/RtmpLG7RTu/patients_blinded.csv
+#> Blinded copy written to /tmp/Rtmp5yxxAs/patients_blinded.csv
 #> 
 #>   patient_id  character  new IDs, same shape (A-00000)
 #>   age         integer    numeric, synthetic values
@@ -70,7 +70,7 @@ Get it as plain lines with
 ``` r
 
 head(format(summary), 3)
-#> [1] "Blinded copy written to /tmp/RtmpLG7RTu/patients_blinded.csv"
+#> [1] "Blinded copy written to /tmp/Rtmp5yxxAs/patients_blinded.csv"
 #> [2] ""                                                            
 #> [3] "  patient_id  character  new IDs, same shape (A-00000)"
 ```

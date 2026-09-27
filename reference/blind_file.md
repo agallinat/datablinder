@@ -119,7 +119,7 @@ to do the same to a data frame.
 csv <- file.path(tempdir(), "cars.csv")
 write.csv(mtcars, csv, row.names = FALSE)
 blind_file(csv, seed = 1)
-#> Blinded copy written to /tmp/RtmpuOtpuZ/cars_blinded.csv
+#> Blinded copy written to /tmp/RtmpRgZvxS/cars_blinded.csv
 #> 
 #>   mpg   numeric  numeric, synthetic values
 #>   cyl   integer  discrete numbers, same values
