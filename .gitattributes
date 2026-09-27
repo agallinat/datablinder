@@ -1,0 +1,10 @@
+# The test fixtures are byte-exact on purpose. This package's job is to write a
+# file back with the delimiter, encoding, byte order mark and line endings it
+# came with, so some fixtures are committed with LF and others with CRLF, and
+# the tests assert which. Git must not translate any of them on checkout: with
+# core.autocrlf=true (the default on Windows) it would rewrite the LF fixtures
+# to CRLF and the tests would be checking something other than what they say.
+tests/testthat/fixtures/** -text
+
+# The demo file for the screenshot, for the same reason.
+data-raw/patients_demo.csv -text

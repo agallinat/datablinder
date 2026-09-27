@@ -86,6 +86,8 @@ test_that("a directory on the PATH is reported as ready to use", {
 })
 
 test_that("a directory off the PATH is reported, with the full path to use", {
+  # The POSIX hint, whatever we are running on. The test below covers Windows.
+  local_mocked_bindings(db_is_windows = function() FALSE)
   dir <- cli_dir()
 
   said <- with_path("/usr/bin", {
