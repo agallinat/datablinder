@@ -1,0 +1,55 @@
+url: https://agallinat.github.io/datablinder/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1f6f8b"
+    # System font stacks on purpose: the site downloads nothing from a third
+    # party, at build time or in the reader's browser.
+    base_font: "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+    code_font: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace"
+  opengraph:
+    image:
+      src: man/figures/app.png
+      alt: "The datablinder app, showing the summary of a blinded file and a preview of its first rows"
+
+home:
+  title: Share the structure of sensitive data, not its contents
+  description: >
+    datablinder replaces the contents of a sensitive or proprietary data file
+    with synthetic values, keeping the columns, classes, formats and file type
+    identical, so that analysis code written against the anonymised copy runs
+    unchanged on the real data.
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: Sharing sensitive data with an AI assistant
+          href: articles/sharing-data-with-ai.html
+        - text: What datablinder does not protect you from
+          href: articles/limits.html
+        - text: Other packages for fake and anonymised data
+          href: articles/alternatives.html
+
+reference:
+  - title: Blinding data
+    desc: >
+      The two functions that do the work. `blind_file()` is `blind_data()` with
+      a reader and a writer around it.
+    contents:
+      - blind_file
+      - blind_data
+      - blind_summary
+  - title: Other ways to run it
+    desc: A local app in the browser, and a command for the terminal.
+    contents:
+      - run_app
+      - install_cli
+  - title: The package
+    contents:
+      - datablinder-package

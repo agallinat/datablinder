@@ -1,18 +1,36 @@
 # datablinder
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/agallinat/datablinder/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/agallinat/datablinder/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/agallinat/datablinder/blob/main/LICENSE.md)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
+
 > "I have this data. I want an analysis and an output. I want an AI to write the
 > code. But the data is sensitive or proprietary, so I can't drop it into a
 > chat."
 
-`datablinder` turns a data file into a **blinded copy**: the same columns, the
-same R classes, the same file format, values that look roughly similar, and not
-one real value in it. Share the copy, get code back, run that code on the real
-file.
+`datablinder` turns a data file into a **blinded copy**: an anonymised,
+synthetic look-alike with the same columns, the same R classes, the same file
+format, values that look roughly similar, and not one real value in it. Share
+the copy with a collaborator or an AI assistant, get code back, run that code on
+the real file.
 
 There is one thing it has to get right, and everything in the package is built
 around it: **code written against the blinded copy runs unchanged on the real
 data**. Integers stay integers, a 0/1 column stays 0/1, dates keep their format,
 a factor keeps its number of levels, and no column ever changes class.
+
+![The datablinder app: the options in the sidebar, the summary of the blinded data and a preview of its first rows in the main area](man/figures/app.png)
+
+## Install
+
+```r
+# install.packages("remotes")
+remotes::install_github("agallinat/datablinder")
+```
+
+Not on CRAN yet.
 
 ## A quick look
 
@@ -48,15 +66,6 @@ That summary is the other half of the point. It describes the blinded data only,
 so it is safe to paste into a chat along with the file, and it tells an AI what
 each column is before it writes a line of code.
 
-## Install
-
-Not on CRAN yet. From a local copy of this repository:
-
-```r
-install.packages("remotes")
-remotes::install_local("path/to/datablinder")
-```
-
 ## Three ways to use it
 
 ### In R
@@ -82,9 +91,7 @@ run_app()
 A small app on `127.0.0.1`, so the file never leaves the computer. Choose a
 file, set the options, press **Blind**, read the summary, copy it with one
 button, look at the first ten blinded rows, download the copy. In RStudio it is
-also under *Addins* > *Blind a data file*.
-
-![The datablinder app: the options in the sidebar, the summary of the blinded data and a preview of its first rows in the main area](man/figures/app.png)
+also under *Addins* > *Blind a data file*. It is the app in the screenshot above.
 
 ### From a terminal
 
@@ -211,6 +218,20 @@ Not in this version: preserving relationships between columns, per-column
 overrides, reading from a database, and complex objects such as Seurat or
 SingleCellExperiment.
 
+## Documentation
+
+Full documentation is at
+[agallinat.github.io/datablinder](https://agallinat.github.io/datablinder/),
+including three longer articles:
+
+- [Sharing sensitive data with an AI assistant](https://agallinat.github.io/datablinder/articles/sharing-data-with-ai.html)
+  — the whole workflow end to end, with a prompt to start from
+- [What datablinder does not protect you from](https://agallinat.github.io/datablinder/articles/limits.html)
+  — read this before deciding you are allowed to share a file
+- [Other packages for fake and anonymised data](https://agallinat.github.io/datablinder/articles/alternatives.html)
+  — how this compares to `synthpop`, `sdcMicro`, `simstudy` and others, and when
+  one of those is the right tool instead
+
 ## Credit
 
 [FakeDataR](https://cran.r-project.org/package=FakeDataR) (MIT) came first and
@@ -230,4 +251,4 @@ each has a test here proving `datablinder` does not do it.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See [LICENSE.md](LICENSE.md).

@@ -1,14 +1,24 @@
 Package: datablinder
-Title: Blinded Copies of Sensitive Data Files
-Version: 0.0.0.9000
+Title: Synthetic Look-Alike Copies of Sensitive Data Files
+Version: 0.1.0
 Authors@R:
-    person("Alex", role = c("aut", "cre"), email = "baloo.142@gmail.com")
-Description: Turns a sensitive data file into a blinded copy with the same
-    columns, classes and file format but fake values, so that analysis code
-    can be written against it and then run unchanged on the real data.
-    Reduces disclosure risk; it offers no formal privacy guarantee.
+    person("Alex", "Gallinat", role = c("aut", "cre"),
+           email = "baloo.142@gmail.com")
+Description: Replaces the contents of a sensitive or proprietary data file with
+    synthetic values while keeping the columns, classes, formats and file type
+    identical, so that analysis code written against the anonymised copy runs
+    unchanged on the real data. Intended for sharing the structure of a dataset
+    with a collaborator or with an AI assistant (a large language model or LLM
+    chatbot) without sharing its contents. Reads and writes delimited text,
+    Excel, SPSS, Stata, 'RDS' and Parquet files, and includes a local 'Shiny'
+    app and a command line script. Reduces disclosure risk; it offers no formal
+    privacy guarantee.
 License: MIT + file LICENSE
+URL: https://agallinat.github.io/datablinder/,
+    https://github.com/agallinat/datablinder
+BugReports: https://github.com/agallinat/datablinder/issues
 Encoding: UTF-8
+Language: en-GB
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends:
@@ -24,6 +34,10 @@ Imports:
     writexl
 Suggests:
     arrow,
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0),
     tibble
+VignetteBuilder: knitr
+Config/Needs/website: pkgdown
 Config/testthat/edition: 3

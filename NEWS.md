@@ -1,4 +1,6 @@
-# datablinder 0.0.0.9000
+# datablinder 0.1.0
+
+First public release.
 
 * Package skeleton.
 

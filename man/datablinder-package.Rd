@@ -4,7 +4,7 @@
 \name{datablinder-package}
 \alias{datablinder}
 \alias{datablinder-package}
-\title{datablinder: Blinded Copies of Sensitive Data Files}
+\title{datablinder: Synthetic Look-Alike Copies of Sensitive Data Files}
 \description{
 Turns a data file into a blinded copy: the same columns, the same R classes,
 the same file format, values that look roughly similar, and not one real
@@ -57,8 +57,17 @@ the blinded file with an AI is a thing you do afterwards, deliberately.
 }
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://agallinat.github.io/datablinder/}
+  \item \url{https://github.com/agallinat/datablinder}
+  \item Report bugs at \url{https://github.com/agallinat/datablinder/issues}
+}
+
+}
 \author{
-\strong{Maintainer}: Alex \email{baloo.142@gmail.com}
+\strong{Maintainer}: Alex Gallinat \email{baloo.142@gmail.com}
 
 }
 \keyword{internal}

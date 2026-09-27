@@ -6,3 +6,10 @@
 ^\.claude$
 (^|/)\.DS_Store$
 ^LICENSE\.md$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^cran-comments\.md$
+^CODE_OF_CONDUCT\.md$
+^\.gitignore$
