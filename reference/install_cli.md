@@ -53,12 +53,12 @@ for the same job in a browser.
 # Into a scratch directory, to show what is written:
 dir <- file.path(tempdir(), "bin")
 install_cli(dir)
-#> The datablinder command is installed in /tmp/RtmpRgZvxS/bin,
+#> The datablinder command is installed in /tmp/RtmpIpDV7f/bin,
 #> which is not on your PATH, so the shell will not find it by name yet.
 #> It works by its full path right away:
-#>   "/tmp/RtmpRgZvxS/bin/datablinder" --help
+#>   "/tmp/RtmpIpDV7f/bin/datablinder" --help
 #> For the short name, add that folder to your PATH:
-#>   echo 'export PATH="/tmp/RtmpRgZvxS/bin:$PATH"' >> ~/.zshrc
+#>   echo 'export PATH="/tmp/RtmpIpDV7f/bin:$PATH"' >> ~/.zshrc
 #>   (~/.bashrc for bash), then open a new terminal and check with:
 #>   echo $PATH
 list.files(dir)
