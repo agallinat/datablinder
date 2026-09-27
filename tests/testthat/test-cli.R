@@ -166,8 +166,12 @@ test_that("the shipped script is executable R that calls db_cli()", {
   skip_if(script == "", "script not installed")
 
   expect_no_error(parse(script))
-  expect_equal(file.access(script, mode = 1L)[[1]], 0L)
   expect_true(any(grepl("db_cli", readLines(script), fixed = TRUE)))
+
+  # Windows has no execute bit to check, which is the whole reason install_cli()
+  # writes a .cmd shim there.
+  skip_on_os("windows")
+  expect_equal(file.access(script, mode = 1L)[[1]], 0L)
 })
 
 test_that("the wrapper leaves the session's RNG alone", {
