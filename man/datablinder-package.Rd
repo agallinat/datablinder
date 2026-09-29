@@ -33,9 +33,9 @@ blinded data, and of it only, to paste into a chat along with the file.
 
 \section{The options}{
 
-Four, the same everywhere: \code{blind_names}, \code{keep_labels}, \code{rows} and \code{seed},
-described in \code{\link[=blind_data]{blind_data()}}. Detection thresholds are internal constants, and
-there is no configuration file.
+Five, the same everywhere: \code{blind_names}, \code{keep_labels}, \code{keep_real}, \code{rows}
+and \code{seed}, described in \code{\link[=blind_data]{blind_data()}}. Detection thresholds are internal
+constants, and there is no configuration file.
 }
 
 \section{Limits}{
@@ -49,6 +49,10 @@ code work.
 \item Read the summary before sharing the file. It is the list of decisions the
 package made, and a column blinded as a category when it is really an
 identifier is the case to catch.
+\item \code{keep_real} turns the promise off for the columns it names: those are shared
+exactly as they are. A column that is harmless by itself can still identify
+someone next to the others, so the summary names every column kept, and the
+leak check says it cannot vouch for them.
 \item The blinded data is for writing code, not for analysis. Columns are blinded
 independently, so no correlation, model coefficient or cross-tabulation on
 the copy means anything about the real data.
@@ -67,7 +71,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Alex Gallinat \email{baloo.142@gmail.com}
+\strong{Maintainer}: Alex Gallinat \email{baloo.142@gmail.com} [copyright holder]
 
 }
 \keyword{internal}

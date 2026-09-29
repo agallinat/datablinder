@@ -78,7 +78,8 @@ your prompt.
 - **Code that relies on a particular real value existing.** By default category
   values become `A`, `B`, `C`, so `region == "North"` matches nothing. That is
   what `keep_labels = TRUE` is for, and it keeps real labels — only use it when
-  the labels are not themselves sensitive.
+  the labels are not themselves sensitive. When the code needs a whole column as
+  it is, `keep_real` is the heavier tool; see below.
 
 ## Detection can be wrong, and the summary is where you see it
 
@@ -109,6 +110,34 @@ The columns where a coincidence *would* mean something — character, factor,
 label and identifier — are checked for zero overlap, and a single match there
 fails the run.
 
+## `keep_real` is the one place the promise is switched off
+
+Everything above assumes the default, which keeps no real value. `keep_real`
+names columns to copy over exactly as they are, because code often cannot be
+written at all without one: `arm == "placebo"`, `group_by(site)`.
+
+```r
+blind_file("trial.csv", keep_real = c("arm", "visit"))
+```
+
+Those columns are shared. That is the point of the option and the cost of it, so
+it is worth being deliberate:
+
+- A column that is harmless by itself can still identify someone in combination
+  with the others. A real postcode, date of birth or site, beside a real sex and
+  a real visit date, can be enough even with every name blinded. This is exactly
+  the territory `sdcMicro` is built for; see `vignette("alternatives")`.
+- The leak check cannot vouch for a kept column. It says so rather than implying
+  otherwise: the verdict line reads
+  `Leak check: passed, except 2 columns kept real: arm, visit`, and each kept
+  column's own line reads `REAL VALUES KEPT, not blinded`. A bare
+  `Leak check: passed` never appears when part of the file is real.
+- `rows` cannot be used at the same time, because a kept column stays matched to
+  the rest of its row.
+
+If a column is only needed for its categories and not its contents,
+`keep_labels = TRUE` does the job and keeps no values.
+
 ## What the package never does
 
 - No network access, anywhere.
@@ -116,7 +145,8 @@ fails the run.
   machine; the app runs on `127.0.0.1`. Sharing the blinded file with an
   assistant is something you do afterwards, deliberately.
 - No real value in the output, except category labels under
-  `keep_labels = TRUE`.
+  `keep_labels = TRUE` and the columns you name in `keep_real`, both of which
+  are off by default and reported in the summary when used.
 - No real data value in any message, warning or error. Problems are reported by
   column name and row number only.
 - No change to your session's random number state: `.Random.seed` is put back as
@@ -124,5 +154,6 @@ fails the run.
 
 ## Not in this version
 
-Preserving relationships between columns, per-column overrides, reading from a
-database, and complex objects such as `Seurat` or `SingleCellExperiment`.
+Preserving relationships between columns, reading from a database, and complex
+objects such as `Seurat` or `SingleCellExperiment`. Per-column control stops at
+`keep_real`: whether to blind a column, but not how.

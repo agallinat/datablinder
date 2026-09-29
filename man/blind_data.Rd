@@ -8,6 +8,7 @@ blind_data(
   data,
   blind_names = FALSE,
   keep_labels = FALSE,
+  keep_real = NULL,
   rows = NULL,
   seed = NULL
 )
@@ -20,6 +21,13 @@ variable labels, which often describe sensitive content.}
 
 \item{keep_labels}{Keep the real factor levels and category values, for when
 code has to filter on them. \code{FALSE} replaces them with \code{A}, \code{B}, \code{C}...}
+
+\item{keep_real}{Names of columns to copy across \strong{unchanged, with their real
+values}, for columns that carry no sensitive information and that code has
+to use as they are, such as a treatment arm or a study visit. These columns
+keep their real names even under \code{blind_names}, and are named in the summary
+and excluded from the leak check. Cannot be combined with \code{rows}. Use it
+sparingly: see the warning below.}
 
 \item{rows}{Number of rows to generate. \code{NULL} keeps the input's row count.}
 
@@ -76,10 +84,38 @@ it wrote them. Code that depends on the content of free text, on a particular
 real value existing, or on a relationship between two columns will not work.
 }
 
+\section{Columns kept real}{
+
+\code{keep_real} names columns that are copied over untouched, so their real values
+end up in the shared copy. It exists because code often has to use a real
+value to be useful at all, as in \code{arm == "placebo"}, and hand-editing the
+blinded file back is worse than asking for it.
+
+It is also the one way to make this package disclose real data, so the
+decision is yours and it is worth making slowly:
+\itemize{
+\item A column that is harmless by itself can still identify someone in
+combination with the others. A real date of birth, postcode or site, next to
+a real sex and a real visit date, can be enough, even with every name
+blinded.
+\item The rows still line up. A kept column stays matched to the rest of its row,
+which is why \code{rows} cannot be used at the same time.
+\item The summary says which columns were kept, and the leak check cannot vouch
+for them. Read both before sharing the file.
+}
+
+The safe default is not to use it. If a column is only needed for its
+categories and not its contents, \code{keep_labels} is usually enough.
+}
+
 \examples{
 fake <- blind_data(mtcars, seed = 1)
 str(fake)
 attr(fake, "blind_summary")
+
+# cyl copied over with its real values, everything else blinded
+arms <- blind_data(mtcars, keep_real = "cyl", seed = 1)
+table(arms$cyl) == table(mtcars$cyl)
 }
 \seealso{
 \code{\link[=blind_file]{blind_file()}} to do the same to a file.

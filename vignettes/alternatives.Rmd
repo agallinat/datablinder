@@ -48,6 +48,13 @@ instead. If your obligation is to release a version of the real data, you want
 disclosure control. If your obligation is never to let the real data leave the
 building, you want a blinded copy.
 
+`keep_real` does not move datablinder into the first camp. It copies the columns
+you name over untouched and says so in the summary; it does not measure
+re-identification risk, and it will not tell you that a kept postcode beside a
+kept date of birth is a problem. If you are keeping enough real columns for that
+question to matter, the question itself is disclosure control, and `sdcMicro` is
+the tool that answers it.
+
 **`synthpop` and `datablinder` pull in opposite directions.** Preserving the
 joint distribution is what makes synthetic data analytically useful, and it is
 also what makes it carry information about the real records. `datablinder`

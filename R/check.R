@@ -17,16 +17,24 @@
 #  none      Overlap is what was asked for: the same set of discrete values, the
 #            same share of TRUE, a constant number kept, or labels kept on
 #            purpose.
+#  kept      keep_real asked for the real column. There is nothing to check: the
+#            values are the real ones by definition. The column is named in the
+#            report instead, so that the summary can say so out loud rather than
+#            let a bare "passed" imply more than it means.
 
 DB_LEAK_FORBID <- "forbid"
 DB_LEAK_CANONICAL <- "canonical"
 DB_LEAK_COUNT <- "count"
 DB_LEAK_NONE <- "none"
+DB_LEAK_KEPT <- "kept"
 
 # Types whose labels are replaced by A, B, C...
 DB_LABEL_TYPES <- c("factor", "category_text", "labelled")
 
-db_leak_rule <- function(type, numeric, keep_labels) {
+db_leak_rule <- function(type, numeric, keep_labels, keep_real = FALSE) {
+  if (isTRUE(keep_real)) {
+    return(DB_LEAK_KEPT)
+  }
   if (type %in% DB_LABEL_TYPES) {
     return(if (keep_labels) DB_LEAK_NONE else DB_LEAK_CANONICAL)
   }
@@ -49,19 +57,25 @@ db_leak_rule <- function(type, numeric, keep_labels) {
 #'   order.
 #' @param specs Specs from `db_detect_all()` on the real table.
 #' @param keep_labels Were real category labels kept on purpose?
-#' @return A list with `passed`, the names of any `leaked` columns, and
-#'   `matches`, one count per column where a coincidence is possible.
+#' @return A list with `passed`, the names of any `leaked` columns, `matches`,
+#'   one count per column where a coincidence is possible, and `kept`, the
+#'   columns `keep_real` excused from the check.
 #' @noRd
 db_check_leaks <- function(real, blinded, specs, keep_labels = FALSE) {
   leaked <- character()
   matches <- integer()
+  kept <- character()
 
   for (i in seq_along(specs)) {
     type <- specs[[i]]$type
-    rule <- db_leak_rule(type, is.numeric(real[[i]]), keep_labels)
+    rule <- db_leak_rule(
+      type, is.numeric(real[[i]]), keep_labels, specs[[i]]$keep_real
+    )
     name <- names(real)[[i]]
 
-    if (rule == DB_LEAK_FORBID) {
+    if (rule == DB_LEAK_KEPT) {
+      kept <- c(kept, name)
+    } else if (rule == DB_LEAK_FORBID) {
       overlap <- intersect(
         db_comparable(blinded[[i]], type),
         db_comparable(real[[i]], type)
@@ -83,7 +97,10 @@ db_check_leaks <- function(real, blinded, specs, keep_labels = FALSE) {
     }
   }
 
-  list(passed = length(leaked) == 0L, leaked = leaked, matches = matches)
+  list(
+    passed = length(leaked) == 0L, leaked = leaked, matches = matches,
+    kept = kept
+  )
 }
 
 # The same check over every sheet of a workbook. Counts keep their sheet name, so
@@ -96,7 +113,13 @@ db_check_leak_tables <- function(real, blinded, specs, keep_labels = FALSE) {
   list(
     passed = all(vapply(reports, function(r) r$passed, logical(1))),
     leaked = unlist(lapply(reports, function(r) r$leaked), use.names = FALSE),
-    matches = unlist(lapply(reports, function(r) r$matches))
+    matches = unlist(lapply(reports, function(r) r$matches)),
+    # One name per column, not per sheet: the same column kept on three sheets is
+    # one thing for the reader to weigh, not three.
+    kept = as.character(unique(unlist(
+      lapply(reports, function(r) r$kept),
+      use.names = FALSE
+    )))
   )
 }
 

@@ -182,3 +182,47 @@ test_that("every sheet is checked and failures are gathered", {
   expect_equal(report$leaked, "id")
   expect_gt(report$matches[["b.score"]], 0L)
 })
+
+# keep_real ----------------------------------------------------------------
+
+test_that("keep_real excuses a column from every rule, whatever its type", {
+  for (type in c("identifier", "email", "factor", "numeric_continuous", "free_text")) {
+    expect_equal(
+      db_leak_rule(type, FALSE, keep_labels = FALSE, keep_real = TRUE),
+      DB_LEAK_KEPT
+    )
+  }
+})
+
+test_that("a kept column is reported rather than checked", {
+  real <- one(
+    patient_id = sprintf("P-%04d", 1:8),
+    score = seq(1.5, 8.5, by = 1)
+  )
+  specs <- db_mark_kept(db_detect_all(real), "patient_id")
+  report <- db_check_leaks(real, real, specs)
+
+  # The identifier is identical in both, which would normally be a hard failure.
+  expect_true(report$passed)
+  expect_equal(report$kept, "patient_id")
+  expect_equal(report$leaked, character())
+  # and it is not counted as a coincidence either
+  expect_false("patient_id" %in% names(report$matches))
+})
+
+test_that("kept is empty when nothing was kept", {
+  real <- one(score = seq(1.5, 8.5, by = 1))
+  expect_equal(checked(real, real)$kept, character())
+})
+
+test_that("across sheets a kept column is reported once", {
+  sheets <- list(
+    patients = one(id = sprintf("P-%04d", 1:6), score = 1:6 + 0.5),
+    visits = one(id = sprintf("P-%04d", 1:6), seen = rep(c(TRUE, FALSE), 3L))
+  )
+  specs <- lapply(sheets, function(x) db_mark_kept(db_detect_all(x), "id"))
+  report <- db_check_leak_tables(sheets, sheets, specs)
+
+  expect_true(report$passed)
+  expect_equal(report$kept, "id")
+})

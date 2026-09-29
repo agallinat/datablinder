@@ -29,8 +29,9 @@ file, and it tells an AI what each column is before it writes a line of code.
 \details{
 Printed, it is the output file if there was one, then one line per column
 giving the name, the class and what was done, then the row count and the
-result of the leak check. \code{format()} returns those same lines as a character
-vector, for writing them somewhere instead of printing them.
+result of the leak check, which names any column \code{keep_real} kept.
+\code{format()} returns those same lines as a character vector, for writing them
+somewhere instead of printing them.
 
 Read it before sharing the file. It is the list of decisions the package made,
 and a column blinded as a category when it is really an identifier, or as free

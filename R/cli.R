@@ -20,6 +20,8 @@ DB_CLI_USAGE <- c(
   "  -o, --output <path>  Where to write the copy (default: <name>_blinded.<ext>)",
   "      --blind-names    Rename the columns to col_01, col_02...",
   "      --keep-labels    Keep the real category labels instead of A, B, C...",
+  "      --keep-real <cols>  Comma separated columns to copy over WITH THEIR REAL",
+  "                       VALUES, unblinded. Cannot be used with --rows",
   "      --rows <n>       Number of rows to generate (default: as many as the input)",
   "      --seed <n>       Seed, for a copy that can be reproduced",
   "  -h, --help           Print this message",
@@ -27,10 +29,12 @@ DB_CLI_USAGE <- c(
   "",
   "Example:",
   "  datablinder patients.csv --blind-names --rows 200 --seed 42",
+  "  datablinder trial.csv --keep-real arm,visit",
   "",
   "This reduces the risk of disclosing the real data. It is not a formal",
   "privacy guarantee: the column names, classes, row count and the broad shape",
-  "of each column stay visible."
+  "of each column stay visible. A column named by --keep-real is shared as it",
+  "is: check that it identifies nobody, on its own or beside the others."
 )
 
 #' Run the command line wrapper
@@ -61,6 +65,7 @@ db_cli <- function(args = character()) {
       output = parsed$output,
       blind_names = parsed$blind_names,
       keep_labels = parsed$keep_labels,
+      keep_real = parsed$keep_real,
       rows = parsed$rows,
       seed = parsed$seed
     ),
@@ -80,7 +85,7 @@ db_cli_parse <- function(args) {
   args <- db_cli_split(args)
   parsed <- list(
     path = NULL, output = NULL, blind_names = FALSE, keep_labels = FALSE,
-    rows = NULL, seed = NULL, help = FALSE, version = FALSE
+    keep_real = NULL, rows = NULL, seed = NULL, help = FALSE, version = FALSE
   )
 
   i <- 1L
@@ -95,6 +100,10 @@ db_cli_parse <- function(args) {
       "-o" = ,
       "--output" = {
         parsed$output <- db_cli_value(args, i)
+        i <- i + 1L
+      },
+      "--keep-real" = {
+        parsed$keep_real <- db_cli_columns(args, i)
         i <- i + 1L
       },
       "--rows" = {
@@ -142,6 +151,21 @@ db_cli_number <- function(args, i) {
     stop("Option \"", args[[i]], "\" needs a whole number.", call. = FALSE)
   }
   number
+}
+
+# A comma separated list of column names. Surrounding spaces are trimmed, so
+# that --keep-real "arm, visit" works as well as --keep-real arm,visit, and a
+# name containing a comma cannot be given here: it is a limitation of the
+# command line only, and blind_file() takes any name.
+db_cli_columns <- function(args, i) {
+  names <- trimws(strsplit(db_cli_value(args, i), ",", fixed = TRUE)[[1]])
+  names <- names[nzchar(names)]
+  if (length(names) == 0L) {
+    stop("Option \"", args[[i]], "\" needs at least one column name.",
+      call. = FALSE
+    )
+  }
+  names
 }
 
 db_cli_path <- function(current, arg) {

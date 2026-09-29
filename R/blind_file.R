@@ -22,6 +22,7 @@
 #'   the data looks like.
 #'
 #' @inheritSection blind_data What happens to each column
+#' @inheritSection blind_data Columns kept real
 #' @seealso [blind_data()] to do the same to a data frame.
 #' @export
 #' @examples
@@ -29,15 +30,22 @@
 #' write.csv(mtcars, csv, row.names = FALSE)
 #' blind_file(csv, seed = 1)
 blind_file <- function(path, output = NULL, blind_names = FALSE,
-                       keep_labels = FALSE, rows = NULL, seed = NULL) {
+                       keep_labels = FALSE, keep_real = NULL, rows = NULL,
+                       seed = NULL) {
   blind_names <- db_check_flag(blind_names, "blind_names")
   keep_labels <- db_check_flag(keep_labels, "keep_labels")
+  keep_real <- db_check_keep_real(keep_real, rows)
 
   source <- db_read(path)
   if (is.null(output)) {
     output <- db_output_path(path)
   }
-  specs <- lapply(source$tables, db_detect_all)
+  # Checked against every sheet at once: a name has to exist somewhere in the
+  # workbook, and it is kept on each sheet that has it.
+  db_check_keep_found(keep_real, unlist(lapply(source$tables, names)))
+  specs <- lapply(source$tables, function(table) {
+    db_mark_kept(db_detect_all(table), keep_real)
+  })
 
   # One seed for the whole file, so that two sheets of the same shape do not come
   # out with the same values.

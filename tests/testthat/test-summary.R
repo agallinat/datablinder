@@ -158,3 +158,45 @@ test_that("no real value reaches the summary of a file with real-looking data", 
   lines <- format(attr(blind_data(data, seed = 1), "blind_summary"))
   expect_false(any(grepl("Nimes|Zurich|75011|13006", lines)))
 })
+
+# keep_real ----------------------------------------------------------------
+
+test_that("a kept column is named and nothing about its values is described", {
+  spec <- db_detect(sprintf("P-%04d", 1:20), "patient_id")
+  spec$keep_real <- TRUE
+  expect_equal(
+    db_describe(sprintf("P-%04d", 1:20), spec, FALSE),
+    "REAL VALUES KEPT, not blinded"
+  )
+})
+
+test_that("the leak check line says which columns were kept real", {
+  leak <- list(passed = TRUE, leaked = character(), matches = integer())
+
+  expect_equal(db_kept_note(character()), "")
+  expect_equal(db_kept_note("arm"), ", except 1 column kept real: arm")
+  expect_equal(
+    db_kept_note(c("arm", "site")), ", except 2 columns kept real: arm, site"
+  )
+
+  described <- data.frame(column = "arm", class = "character", note = "kept")
+  lines <- format(db_summary(
+    tables = list(data = described),
+    leak = c(leak, list(kept = c("arm", "site")))
+  ))
+  expect_match(
+    lines[grepl("^Leak check", lines)],
+    "Leak check: passed, except 2 columns kept real: arm, site",
+    fixed = TRUE
+  )
+})
+
+test_that("a summary with nothing kept reads exactly as it did before", {
+  leak <- list(
+    passed = TRUE, leaked = character(), matches = integer(),
+    kept = character()
+  )
+  described <- data.frame(column = "age", class = "integer", note = "numeric")
+  lines <- format(db_summary(tables = list(data = described), leak = leak))
+  expect_true("Leak check: passed" %in% lines)
+})

@@ -262,3 +262,183 @@ test_that("keep_labels makes the group names match too", {
   by_region <- function(data) names(tapply(data$score, data$region, mean))
   expect_equal(by_region(blinded), by_region(real))
 })
+
+# keep_real --------------------------------------------------------------
+
+test_that("a column named by keep_real comes through untouched", {
+  real <- clinic()
+  blinded <- blind_data(real, keep_real = "region", seed = 1)
+
+  expect_equal(blinded$region, real$region)
+  expect_equal(levels(blinded$region), levels(real$region))
+  # and the rest is still blinded
+  expect_false(identical(blinded$patient_id, real$patient_id))
+  expect_false(identical(blinded$notes, real$notes))
+})
+
+test_that("keep_real takes several columns and leaves the others alone", {
+  real <- clinic()
+  blinded <- blind_data(real, keep_real = c("region", "visit", "am"), seed = 1)
+
+  for (column in c("region", "visit", "am")) {
+    expect_equal(blinded[[column]], real[[column]], info = column)
+  }
+  for (column in c("patient_id", "age", "score", "seen", "postcode", "notes")) {
+    expect_false(identical(blinded[[column]], real[[column]]), info = column)
+  }
+})
+
+test_that("keeping a column changes neither the shape nor the classes", {
+  real <- clinic()
+  blinded <- blind_data(real, keep_real = "visit", seed = 1)
+
+  expect_named(blinded, names(real))
+  expect_equal(col_classes(blinded), col_classes(real))
+  expect_equal(nrow(blinded), nrow(real))
+})
+
+test_that("nothing is kept by default", {
+  real <- clinic()
+  for (value in list(NULL, character())) {
+    blinded <- blind_data(real, keep_real = value, seed = 1)
+    expect_false(identical(blinded$region, real$region))
+    expect_equal(attr(blinded, "blind_summary")$leak$kept, character())
+  }
+})
+
+test_that("a kept column keeps its real name under blind_names", {
+  real <- clinic()
+  blinded <- blind_data(real, keep_real = "region", blind_names = TRUE, seed = 1)
+
+  # The numbering stays positional, so a column can still be traced back to the
+  # one it came from.
+  expect_named(blinded, c(
+    "col_01", "col_02", "col_03", "col_04", "region",
+    "col_06", "col_07", "col_08", "col_09"
+  ))
+  expect_equal(blinded$region, real$region)
+})
+
+test_that("a kept column keeps its variable label under blind_names", {
+  real <- data.frame(arm = c("a", "b", "a", "b"), score = c(1.5, 2.5, 3.5, 4.5))
+  attr(real$arm, "label") <- "Treatment arm"
+  attr(real$score, "label") <- "Baseline score"
+
+  blinded <- blind_data(real, keep_real = "arm", blind_names = TRUE, seed = 1)
+  expect_equal(attr(blinded$arm, "label"), "Treatment arm")
+  expect_null(attr(blinded$col_02, "label"))
+})
+
+test_that("keep_real and rows cannot be used together", {
+  expect_error(
+    blind_data(clinic(), keep_real = "region", rows = 10L),
+    "cannot be used together"
+  )
+})
+
+test_that("keep_real must name columns the data has, and says which it cannot", {
+  expect_error(
+    blind_data(clinic(), keep_real = "arm"),
+    "does not have: \"arm\"",
+    fixed = TRUE
+  )
+  expect_error(
+    blind_data(clinic(), keep_real = c("region", "arm", "site")),
+    "columns that the data does not have: \"arm\", \"site\"",
+    fixed = TRUE
+  )
+})
+
+test_that("keep_real must be a character vector of names", {
+  for (value in list(1, TRUE, NA_character_, c("region", NA), c("region", ""))) {
+    expect_error(
+      blind_data(clinic(), keep_real = value),
+      "must be a character vector of column names"
+    )
+  }
+})
+
+test_that("naming the same column twice is the same as naming it once", {
+  real <- clinic()
+  blinded <- blind_data(real, keep_real = c("region", "region"), seed = 1)
+
+  expect_equal(blinded$region, real$region)
+  expect_equal(attr(blinded, "blind_summary")$leak$kept, "region")
+})
+
+test_that("keeping every column returns the data as it was", {
+  real <- clinic(5L)
+  blinded <- blind_data(real, keep_real = names(real), seed = 1)
+  attr(blinded, "blind_summary") <- NULL
+  expect_equal(as.data.frame(blinded), real)
+})
+
+test_that("the summary names the kept column and the leak check still passes", {
+  real <- clinic()
+  info <- attr(blind_data(real, keep_real = c("region", "visit"), seed = 1),
+    "blind_summary"
+  )
+  lines <- format(info)
+
+  expect_true(info$leak$passed)
+  expect_equal(info$leak$kept, c("region", "visit"))
+  expect_match(
+    lines[grepl("^Leak check", lines)],
+    "passed, except 2 columns kept real: region, visit",
+    fixed = TRUE
+  )
+  expect_match(
+    lines[grepl("^  region", lines)], "REAL VALUES KEPT, not blinded",
+    fixed = TRUE
+  )
+})
+
+test_that("a kept column is not counted as a coincidence", {
+  # score is continuous, so left to itself it is counted, not forbidden; kept, it
+  # should not be counted either, or every row would look like a coincidence.
+  info <- attr(blind_data(clinic(), keep_real = "score", seed = 1),
+    "blind_summary"
+  )
+  expect_false("score" %in% names(info$leak$matches))
+})
+
+test_that("keeping an identifier does not trip the leak check", {
+  # The one case the check would otherwise stop: identifiers are forbidden from
+  # overlapping at all.
+  real <- clinic()
+  blinded <- blind_data(real, keep_real = "patient_id", seed = 1)
+
+  expect_equal(blinded$patient_id, real$patient_id)
+  expect_true(attr(blinded, "blind_summary")$leak$passed)
+})
+
+test_that("a kept column stays lined up with its own rows", {
+  real <- clinic(60L)
+  blinded <- blind_data(real, keep_real = c("region", "visit"), seed = 1)
+  expect_equal(
+    tapply(blinded$visit, blinded$region, min),
+    tapply(real$visit, real$region, min)
+  )
+})
+
+test_that("keep_real works on a tibble and a data.table", {
+  skip_if_not_installed("tibble")
+  real <- clinic(20L)
+
+  blinded <- blind_data(tibble::as_tibble(real), keep_real = "region", seed = 1)
+  expect_s3_class(blinded, "tbl_df")
+  expect_equal(blinded$region, real$region)
+
+  blinded <- blind_data(data.table::as.data.table(real),
+    keep_real = "region", seed = 1
+  )
+  expect_s3_class(blinded, "data.table")
+  expect_equal(blinded$region, real$region)
+})
+
+test_that("keeping a column does not disturb the session's RNG", {
+  set.seed(99L)
+  before <- .Random.seed
+  blind_data(clinic(), keep_real = "region", seed = 1)
+  expect_equal(.Random.seed, before)
+})

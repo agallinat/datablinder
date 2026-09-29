@@ -21,9 +21,9 @@
 #' blinded data, and of it only, to paste into a chat along with the file.
 #'
 #' @section The options:
-#' Four, the same everywhere: `blind_names`, `keep_labels`, `rows` and `seed`,
-#' described in [blind_data()]. Detection thresholds are internal constants, and
-#' there is no configuration file.
+#' Five, the same everywhere: `blind_names`, `keep_labels`, `keep_real`, `rows`
+#' and `seed`, described in [blind_data()]. Detection thresholds are internal
+#' constants, and there is no configuration file.
 #'
 #' @section Limits:
 #' * This is not a formal privacy guarantee. It reduces the risk of disclosing
@@ -34,6 +34,10 @@
 #' * Read the summary before sharing the file. It is the list of decisions the
 #'   package made, and a column blinded as a category when it is really an
 #'   identifier is the case to catch.
+#' * `keep_real` turns the promise off for the columns it names: those are shared
+#'   exactly as they are. A column that is harmless by itself can still identify
+#'   someone next to the others, so the summary names every column kept, and the
+#'   leak check says it cannot vouch for them.
 #' * The blinded data is for writing code, not for analysis. Columns are blinded
 #'   independently, so no correlation, model coefficient or cross-tabulation on
 #'   the copy means anything about the real data.

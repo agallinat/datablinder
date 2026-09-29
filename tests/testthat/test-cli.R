@@ -183,3 +183,70 @@ test_that("the wrapper leaves the session's RNG alone", {
 
   expect_identical(.Random.seed, before)
 })
+
+# --keep-real --------------------------------------------------------------
+
+test_that("--keep-real takes one column or a comma separated list", {
+  expect_equal(db_cli_parse(c("a.csv", "--keep-real", "arm"))$keep_real, "arm")
+  expect_equal(
+    db_cli_parse(c("a.csv", "--keep-real", "arm,visit"))$keep_real,
+    c("arm", "visit")
+  )
+  expect_equal(
+    db_cli_parse(c("a.csv", "--keep-real=arm,visit"))$keep_real,
+    c("arm", "visit")
+  )
+  # spaces around the commas, as a shell user would quote them
+  expect_equal(
+    db_cli_parse(c("a.csv", "--keep-real", "arm, visit"))$keep_real,
+    c("arm", "visit")
+  )
+})
+
+test_that("--keep-real needs at least one name", {
+  expect_error(db_cli_parse(c("a.csv", "--keep-real")), "needs a value")
+  expect_error(
+    db_cli_parse(c("a.csv", "--keep-real", ",")),
+    "needs at least one column name"
+  )
+})
+
+test_that("nothing is kept unless --keep-real says so", {
+  expect_null(db_cli_parse("a.csv")$keep_real)
+})
+
+test_that("--keep-real reaches blind_file and is reported on stdout", {
+  path <- staged_cli("comma.csv")
+  real <- db_read(path)$tables$data
+  run <- run_cli(path, "--keep-real", "sex", "--seed", "1")
+
+  expect_equal(run$status, DB_CLI_OK)
+  expect_match(paste(run$out, collapse = "\n"), "kept real: sex", fixed = TRUE)
+  blinded <- db_read(sub("comma\\.csv$", "comma_blinded.csv", path))$tables$data
+  expect_equal(blinded$sex, real$sex)
+})
+
+test_that("a column the file does not have exits non-zero and writes nothing", {
+  path <- staged_cli("comma.csv")
+  output <- tmp_path("cli_nothing.csv")
+  run <- run_cli(path, "--keep-real", "arm", "--output", output)
+
+  expect_equal(run$status, DB_CLI_ERROR)
+  expect_match(paste(run$err, collapse = "\n"), "does not have", fixed = TRUE)
+  expect_false(file.exists(output))
+})
+
+test_that("--keep-real with --rows exits non-zero", {
+  run <- run_cli(staged_cli("comma.csv"), "--keep-real", "sex", "--rows", "10")
+  expect_equal(run$status, DB_CLI_ERROR)
+  expect_match(
+    paste(run$err, collapse = "\n"), "cannot be used together", fixed = TRUE
+  )
+})
+
+test_that("the help text documents --keep-real and what it costs", {
+  help <- paste(DB_CLI_USAGE, collapse = "\n")
+  expect_match(help, "--keep-real", fixed = TRUE)
+  expect_match(help, "REAL", fixed = TRUE)
+  expect_match(help, "identifies nobody", fixed = TRUE)
+})

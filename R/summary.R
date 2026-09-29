@@ -4,7 +4,8 @@
 # pasted into a chat to give an AI the context it needs. That rule is why the
 # level labels and code shapes here are read back off the blinded column rather
 # than worked out from the real one, and why nothing is shown at all when
-# keep_labels kept the real labels.
+# keep_labels kept the real labels. A column kept by keep_real is named and
+# nothing more: its values are real, so none of them is described.
 
 # How many category labels to list before trailing off.
 DB_SUMMARY_LABELS <- 6L
@@ -39,6 +40,9 @@ db_describe_table <- function(blinded, specs, keep_labels = FALSE) {
 }
 
 db_describe <- function(x, spec, keep_labels) {
+  if (isTRUE(spec$keep_real)) {
+    return("REAL VALUES KEPT, not blinded")
+  }
   switch(spec$type,
     all_na = "all values missing",
     constant = if (is.numeric(x)) {
@@ -103,8 +107,9 @@ db_masked_shape <- function(x) {
 #'
 #' Printed, it is the output file if there was one, then one line per column
 #' giving the name, the class and what was done, then the row count and the
-#' result of the leak check. `format()` returns those same lines as a character
-#' vector, for writing them somewhere instead of printing them.
+#' result of the leak check, which names any column `keep_real` kept.
+#' `format()` returns those same lines as a character vector, for writing them
+#' somewhere instead of printing them.
 #'
 #' Read it before sharing the file. It is the list of decisions the package made,
 #' and a column blinded as a category when it is really an identifier, or as free
@@ -143,7 +148,8 @@ format.blind_summary <- function(x, ...) {
     lines <- c(lines, paste0("Rows: ", x$rows))
   }
   lines <- c(lines, paste0(
-    "Leak check: ", if (x$leak$passed) "passed" else "failed"
+    "Leak check: ", if (x$leak$passed) "passed" else "failed",
+    db_kept_note(x$leak$kept)
   ))
   matches <- sum(x$leak$matches)
   if (length(x$leak$matches) > 0L && matches > 0L) {
@@ -153,6 +159,20 @@ format.blind_summary <- function(x, ...) {
     ))
   }
   lines
+}
+
+# Columns kept real go on the leak check line itself, because that is the line a
+# reader takes as the verdict, and it cannot be allowed to say "passed" alone
+# when part of the file is real.
+db_kept_note <- function(kept) {
+  if (length(kept) == 0L) {
+    return("")
+  }
+  paste0(
+    ", except ", length(kept),
+    if (length(kept) == 1L) " column " else " columns ",
+    "kept real: ", paste(kept, collapse = ", ")
+  )
 }
 
 #' @rdname blind_summary

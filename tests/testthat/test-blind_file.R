@@ -337,3 +337,75 @@ test_that("an analysis written for the blinded file runs on the real file", {
   expect_equal(on_blinded$coefficients, on_real$coefficients)
   expect_equal(on_blinded$ids, on_real$ids)
 })
+
+# keep_real --------------------------------------------------------------
+
+test_that("keep_real carries a column through a csv untouched", {
+  path <- staged("comma.csv")
+  real <- db_read(path)$tables$data
+  summary <- blind_file(path, keep_real = "sex", seed = 1)
+  blinded <- db_read(summary$output)$tables$data
+
+  expect_equal(blinded$sex, real$sex)
+  expect_false(identical(blinded$id, real$id))
+  expect_true(summary$leak$passed)
+  expect_equal(summary$leak$kept, "sex")
+  expect_match(
+    format(summary), "kept real: sex", fixed = TRUE, all = FALSE
+  )
+})
+
+test_that("in a workbook a column is kept on every sheet that has it", {
+  path <- staged("two_sheets.xlsx")
+  real <- db_read(path)$tables
+  summary <- blind_file(path, keep_real = "id", seed = 1)
+  blinded <- db_read(summary$output)$tables
+
+  expect_equal(blinded$patients$id, real$patients$id)
+  expect_equal(blinded$visits$id, real$visits$id)
+  expect_false(identical(blinded$patients$score, real$patients$score))
+  expect_equal(summary$leak$kept, "id")
+})
+
+test_that("a column on one sheet only is kept there and not demanded elsewhere", {
+  path <- staged("two_sheets.xlsx")
+  real <- db_read(path)$tables
+  summary <- blind_file(path, keep_real = "seen", seed = 1)
+  blinded <- db_read(summary$output)$tables
+
+  expect_equal(blinded$visits$seen, real$visits$seen)
+  expect_equal(summary$leak$kept, "seen")
+})
+
+test_that("a name in no sheet of the workbook is an error", {
+  expect_error(
+    blind_file(staged("two_sheets.xlsx"), keep_real = "arm"),
+    "does not have: \"arm\"",
+    fixed = TRUE
+  )
+})
+
+test_that("blind_file refuses keep_real together with rows", {
+  expect_error(
+    blind_file(staged("comma.csv"), keep_real = "sex", rows = 10L),
+    "cannot be used together"
+  )
+})
+
+test_that("a kept column is never written when the call fails first", {
+  path <- staged("comma.csv")
+  output <- tmp_path("must_not_exist.csv")
+  expect_error(blind_file(path, output = output, keep_real = "nope"))
+  expect_false(file.exists(output))
+})
+
+test_that("keep_real survives an spss round trip with its labels", {
+  path <- staged("labelled.sav")
+  real <- db_read(path)$tables$data
+  summary <- blind_file(path, keep_real = "region", seed = 1)
+  blinded <- db_read(summary$output)$tables$data
+
+  expect_equal(as.vector(blinded$region), as.vector(real$region))
+  expect_equal(attr(blinded$region, "labels"), attr(real$region, "labels"))
+  expect_equal(summary$leak$kept, "region")
+})

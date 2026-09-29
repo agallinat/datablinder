@@ -388,3 +388,77 @@ test_that("a parquet file round trips with its columns, classes and rows", {
   expect_equal(col_classes(again$tables$data), col_classes(source$tables$data))
   expect_equal(again$tables$data, source$tables$data)
 })
+
+# Column names without the values ----------------------------------------
+
+test_that("the column names of a file can be read on their own", {
+  expect_equal(
+    db_read_columns(test_path("fixtures", "comma.csv")),
+    c("id", "age", "score", "sex", "visit_date", "notes")
+  )
+  expect_equal(
+    db_read_columns(test_path("fixtures", "semicolon.csv")),
+    names(db_read(test_path("fixtures", "semicolon.csv"))$tables$data)
+  )
+  expect_equal(
+    db_read_columns(test_path("fixtures", "tabs.tsv")),
+    names(db_read(test_path("fixtures", "tabs.tsv"))$tables$data)
+  )
+  expect_equal(
+    db_read_columns(test_path("fixtures", "labelled.sav")),
+    names(db_read(test_path("fixtures", "labelled.sav"))$tables$data)
+  )
+  expect_equal(
+    db_read_columns(test_path("fixtures", "labelled.dta")),
+    names(db_read(test_path("fixtures", "labelled.dta"))$tables$data)
+  )
+  expect_equal(
+    db_read_columns(test_path("fixtures", "table.rds")),
+    names(db_read(test_path("fixtures", "table.rds"))$tables$data)
+  )
+})
+
+test_that("a workbook gives the columns of every sheet, once each", {
+  # "id" is on both sheets, and the empty sheet adds nothing.
+  expect_equal(
+    db_read_columns(test_path("fixtures", "two_sheets.xlsx")),
+    c("id", "age", "score", "sex", "visit", "seen")
+  )
+})
+
+test_that("reading the columns of a parquet file needs no values either", {
+  skip_if_not_installed("arrow")
+  path <- tmp_path("columns.parquet")
+  arrow::write_parquet(data.frame(arm = c("a", "b"), score = c(1.5, 2.5)), path)
+  expect_equal(db_read_columns(path), c("arm", "score"))
+})
+
+test_that("a headerless text file gives the names fread invents", {
+  path <- tmp_path("headerless.csv")
+  writeLines(c("1,2,3", "4,5,6"), path)
+  expect_equal(db_read_columns(path), c("V1", "V2", "V3"))
+  expect_equal(db_read_columns(path), names(db_read(path)$tables$data))
+})
+
+test_that("the columns of a file that is not there or not supported are an error", {
+  expect_error(db_read_columns(tmp_path("missing.csv")), "File not found")
+  path <- tmp_path("notes.docx")
+  writeLines("not a data file", path)
+  expect_error(db_read_columns(path), "Cannot tell the file type")
+})
+
+test_that("a non-ASCII header is named the same way read alone or read whole", {
+  # The app validates the chosen columns against what blind_file() sees, so the
+  # two readings must agree byte for byte, whatever the file's encoding.
+  for (encoding in c("UTF-8", "latin1")) {
+    path <- tmp_path(paste0("accents_", encoding, ".csv"))
+    con <- file(path, open = "w", encoding = encoding)
+    writeLines(c("id,année,région", "1,2021,nord"), con)
+    close(con)
+
+    expect_equal(
+      db_read_columns(path), names(db_read(path)$tables$data),
+      info = encoding
+    )
+  }
+})

@@ -271,3 +271,79 @@ test_that("the app is a shiny app and the RStudio addin points at run_app", {
   expect_equal(unname(addins[, "Binding"]), "run_app")
   expect_true(exists("run_app", envir = asNamespace("datablinder")))
 })
+
+# Keeping columns real ---------------------------------------------------
+
+test_that("a file is staged as soon as it is uploaded, to list its columns", {
+  # The columns have to be offered before anything is blinded, so the upload is
+  # copied and read on arrival rather than on the Blind button.
+  shiny::testServer(db_app(), {
+    info <- as_upload("comma.csv")
+    options_for(session, file = info)
+
+    expect_false(file.exists(info$datapath))
+    expect_equal(
+      db_read_columns(as_upload("comma.csv")$datapath),
+      c("id", "age", "score", "sex", "visit_date", "notes")
+    )
+  })
+})
+
+test_that("a file whose columns cannot be read still leaves the app standing", {
+  shiny::testServer(db_app(), {
+    options_for(session, file = as_bad_upload())
+    expect_equal(output$summary, DB_APP_PLACEHOLDER)
+
+    session$setInputs(file = as_upload("comma.csv"), keep_real = "sex", blind = 1)
+    expect_match(output$summary, "kept real: sex", fixed = TRUE)
+  })
+})
+
+test_that("the chosen columns reach blind_file and are named in the summary", {
+  real <- db_read(test_path("fixtures", "comma.csv"))$tables$data
+  shiny::testServer(db_app(), {
+    options_for(session, file = as_upload("comma.csv"), keep_real = "sex")
+    session$setInputs(blind = 1)
+
+    expect_match(output$summary, "kept real: sex", fixed = TRUE)
+    expect_match(output$summary, "REAL VALUES KEPT", fixed = TRUE)
+    expect_equal(db_read(output$blinded_file)$tables$data$sex, real$sex)
+  })
+})
+
+test_that("an empty selection blinds everything", {
+  real <- db_read(test_path("fixtures", "comma.csv"))$tables$data
+  shiny::testServer(db_app(), {
+    options_for(session, file = as_upload("comma.csv"), keep_real = NULL)
+    session$setInputs(blind = 1)
+
+    expect_no_match(output$summary, "kept real")
+    expect_false(identical(db_read(output$blinded_file)$tables$data$sex, real$sex))
+  })
+})
+
+test_that("keeping a column and asking for rows is reported, not done", {
+  shiny::testServer(db_app(), {
+    options_for(session, file = as_upload("comma.csv"), keep_real = "sex",
+      rows = 10
+    )
+    session$setInputs(blind = 1)
+    expect_equal(output$summary, DB_APP_PLACEHOLDER)
+    expect_null(output$download)
+  })
+})
+
+test_that("an empty selectize value means nothing chosen", {
+  expect_null(db_app_columns(NULL))
+  expect_null(db_app_columns(""))
+  expect_null(db_app_columns(character()))
+  expect_null(db_app_columns(NA_character_))
+  expect_equal(db_app_columns(c("arm", "", "visit")), c("arm", "visit"))
+})
+
+test_that("the keep real box says what it costs", {
+  html <- as.character(db_app_ui())
+  expect_match(html, "Keep real (not blinded)", fixed = TRUE)
+  expect_match(html, "real values included", fixed = TRUE)
+  expect_match(html, "identify nobody", fixed = TRUE)
+})

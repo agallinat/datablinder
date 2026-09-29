@@ -22,6 +22,18 @@ db_app_ui <- function() {
       shiny::checkboxInput("blind_names", "Blind column names", FALSE),
       shiny::checkboxInput("keep_labels", "Keep category labels", FALSE),
       db_app_field(
+        shiny::selectizeInput(
+          "keep_real", "Keep real (not blinded)",
+          choices = character(), selected = NULL, multiple = TRUE,
+          options = list(placeholder = "None: blind every column")
+        ),
+        paste(
+          "These columns are shared exactly as they are, real values included.",
+          "Only for columns that identify nobody, on their own or beside the",
+          "others. Cannot be used with Rows."
+        )
+      ),
+      db_app_field(
         shiny::numericInput("rows", "Rows", value = NA, min = 1, step = 1),
         "Number of rows in the blinded copy. Empty: as many as the input."
       ),
@@ -100,6 +112,8 @@ db_app_note <- function() {
     "runs unchanged on the real data. It reduces the risk of disclosing the",
     "real values but gives no formal privacy guarantee: the column names,",
     "classes, row count and the broad shape of each column stay visible.",
+    "A column listed under \"Keep real\" is not blinded at all and its real",
+    "values are in the copy, so check the summary before sharing it.",
     "Everything runs on this computer; no data is sent anywhere."
   )
 }

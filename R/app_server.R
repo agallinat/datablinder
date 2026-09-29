@@ -12,6 +12,29 @@ db_app_server <- function(input, output, session) {
   staging <- shiny::reactiveVal(NULL) # our copy of the uploaded file
   result <- shiny::reactiveVal(NULL) # what the last run produced
 
+  # Take the copy as soon as the file arrives, so that the "keep real" list can
+  # offer the columns by name. Only the header is read. A file that cannot be
+  # read leaves the list empty and says nothing: pressing Blind is what reports
+  # the reason.
+  shiny::observeEvent(input$file, {
+    info <- input$file
+    if (length(info$datapath) == 0L) {
+      return()
+    }
+    columns <- tryCatch(
+      {
+        staged <- db_app_stage(info, work_dir, staging())
+        staging(staged)
+        db_read_columns(staged$path)
+      },
+      error = function(e) character()
+    )
+    shiny::updateSelectizeInput(
+      session, "keep_real",
+      choices = columns, selected = character()
+    )
+  })
+
   shiny::observeEvent(input$blind, {
     info <- input$file
     if (length(info$datapath) == 0L) {
@@ -31,6 +54,7 @@ db_app_server <- function(input, output, session) {
             staged$path,
             blind_names = isTRUE(input$blind_names),
             keep_labels = isTRUE(input$keep_labels),
+            keep_real = db_app_columns(input$keep_real),
             rows = db_app_number(input$rows),
             seed = db_app_number(input$seed)
           )
@@ -125,11 +149,12 @@ db_app_stage <- function(info, dir, staged = NULL) {
   list(datapath = info$datapath[[1]], path = target)
 }
 
-db_app_blind <- function(path, blind_names, keep_labels, rows, seed) {
+db_app_blind <- function(path, blind_names, keep_labels, keep_real, rows,
+                         seed) {
   summary <- blind_file(
     path,
     blind_names = blind_names, keep_labels = keep_labels,
-    rows = rows, seed = seed
+    keep_real = keep_real, rows = rows, seed = seed
   )
   list(
     summary = summary,
@@ -147,6 +172,16 @@ db_app_number <- function(value) {
     return(NULL)
   }
   value
+}
+
+# An empty multiple selectizeInput arrives as NULL or "", both meaning "nothing
+# chosen", which blind_file() spells NULL.
+db_app_columns <- function(value) {
+  value <- value[!is.na(value) & nzchar(value)]
+  if (length(value) == 0L) {
+    return(NULL)
+  }
+  as.character(value)
 }
 
 # The temporary path of the copy is of no use in the app, and would be noise in

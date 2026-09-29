@@ -77,6 +77,47 @@ db_read <- function(path) {
   )
 }
 
+#' The column names of a data file, without reading its values
+#'
+#' Only the app needs this: it has to offer the columns before anything has been
+#' blinded, and reading a large file twice to do it would be a poor trade. Every
+#' reader here stops at the header where the format allows it. RDS is the one
+#' that cannot: an R object has to be loaded whole.
+#'
+#' @param path Path to a data file.
+#' @return A character vector of column names, one entry per column of every
+#'   sheet, deduplicated.
+#' @noRd
+db_read_columns <- function(path) {
+  if (!file.exists(path)) {
+    stop("File not found: ", path, call. = FALSE)
+  }
+  type <- db_file_type(path)
+  names <- switch(type,
+    csv = ,
+    tsv = names(db_fread(path, db_sniff_delim(path, type), nrows = 0L)),
+    xlsx = ,
+    xls = unlist(lapply(readxl::excel_sheets(path), function(sheet) {
+      names(readxl::read_excel(
+        path,
+        sheet = sheet, n_max = 0, .name_repair = "minimal", progress = FALSE
+      ))
+    })),
+    sav = names(haven::read_sav(path, n_max = 0)),
+    dta = names(haven::read_dta(path, n_max = 0)),
+    rds = names(db_read_rds(path)$tables[[1]]),
+    parquet = db_parquet_columns(path),
+    stop("Reading ", type, " files is not supported yet.", call. = FALSE)
+  )
+  unique(as.character(names))
+}
+
+# open_dataset() reads the footer rather than the columns.
+db_parquet_columns <- function(path) {
+  db_require_arrow()
+  names(arrow::open_dataset(path, format = "parquet"))
+}
+
 db_write <- function(source, path) {
   switch(source$type,
     csv = ,
@@ -96,22 +137,29 @@ db_write <- function(source, path) {
 
 db_read_delim <- function(path, type = db_file_type(path)) {
   meta <- db_sniff_delim(path, type)
-  df <- data.table::fread(
+  df <- db_fread(path, meta)
+  # fread names unheaded columns V1, V2, ...; that is our only clue that the
+  # file had no header line, and we must not invent one on the way out.
+  meta$header <- !identical(names(df), paste0("V", seq_along(df)))
+  list(path = path, type = type, tables = list(data = df), meta = meta)
+}
+
+# One fread call for the whole package, so that reading a file's header alone
+# cannot name its columns differently from reading the file.
+db_fread <- function(path, meta, nrows = Inf) {
+  data.table::fread(
     file = path,
     sep = meta$sep,
     dec = meta$dec,
     encoding = meta$encoding,
     na.strings = unique(c("", "NA", meta$na_string)),
+    nrows = nrows,
     keepLeadingZeros = TRUE,
     logical01 = FALSE,
     data.table = FALSE,
     check.names = FALSE,
     showProgress = FALSE
   )
-  # fread names unheaded columns V1, V2, ...; that is our only clue that the
-  # file had no header line, and we must not invent one on the way out.
-  meta$header <- !identical(names(df), paste0("V", seq_along(df)))
-  list(path = path, type = type, tables = list(data = df), meta = meta)
 }
 
 db_write_delim <- function(x, path, meta) {
