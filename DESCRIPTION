@@ -2,7 +2,7 @@ Package: datablinder
 Title: Synthetic Look-Alike Copies of Sensitive Data Files
 Version: 0.1.0
 Authors@R:
-    person("Alex", "Gallinat", role = c("aut", "cre"),
+    person("Alex", "Gallinat", role = c("aut", "cre", "cph"),
            email = "baloo.142@gmail.com")
 Description: Replaces the contents of a sensitive or proprietary data file with
     synthetic values while keeping the columns, classes, formats and file type
@@ -10,9 +10,9 @@ Description: Replaces the contents of a sensitive or proprietary data file with
     unchanged on the real data. Intended for sharing the structure of a dataset
     with a collaborator or with an AI assistant (a large language model or LLM
     chatbot) without sharing its contents. Reads and writes delimited text,
-    Excel, SPSS, Stata, 'RDS' and Parquet files, and includes a local 'Shiny'
-    app and a command line script. Reduces disclosure risk; it offers no formal
-    privacy guarantee.
+    'Excel', 'SPSS', 'Stata', 'RDS' and 'Parquet' files, and includes a local
+    'Shiny' app and a command line script. Reduces disclosure risk; it offers
+    no formal privacy guarantee.
 License: MIT + file LICENSE
 URL: https://agallinat.github.io/datablinder/,
     https://github.com/agallinat/datablinder
