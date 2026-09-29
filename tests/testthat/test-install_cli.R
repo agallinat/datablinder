@@ -90,8 +90,12 @@ test_that("a directory off the PATH is reported, with the full path to use", {
   local_mocked_bindings(db_is_windows = function() FALSE)
   dir <- cli_dir()
 
+  # capture_messages() and not capture.output(type = "message"): the notes are a
+  # message() condition, and under devtools::test() those are muffled before they
+  # ever reach a sink, so the sink would capture nothing and all three
+  # expectations below would fail for the wrong reason.
   said <- with_path("/usr/bin", {
-    capture.output(install_cli(dir), type = "message")
+    capture_messages(install_cli(dir))
   })
 
   expect_true(any(grepl("not on your PATH", said, fixed = TRUE)))

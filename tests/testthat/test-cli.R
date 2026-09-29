@@ -9,6 +9,11 @@ staged_cli <- function(fixture) {
 }
 
 # The exit status and both streams, with nothing left on the test's own output.
+#
+# A sink is right here and capture_messages() would be wrong: db_cli_err() writes
+# to stderr with cat(), which is not a message() condition and so is not caught
+# by a calling handler. test-install_cli.R needs the opposite, for the opposite
+# reason.
 run_cli <- function(...) {
   status <- NULL
   err <- NULL
