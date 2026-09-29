@@ -83,8 +83,9 @@ attribute of a <code><a href="blind_data.html">blind_data()</a></code> result.</
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Printed, it is the output file if there was one, then one line per column
 giving the name, the class and what was done, then the row count and the
-result of the leak check. <code><a href="https://rdrr.io/r/base/format.html" class="external-link">format()</a></code> returns those same lines as a character
-vector, for writing them somewhere instead of printing them.</p>
+result of the leak check, which names any column <code>keep_real</code> kept.
+<code><a href="https://rdrr.io/r/base/format.html" class="external-link">format()</a></code> returns those same lines as a character vector, for writing them
+somewhere instead of printing them.</p>
 <p>Read it before sharing the file. It is the list of decisions the package made,
 and a column blinded as a category when it is really an identifier, or as free
 text when it is really a code, is the case to catch.</p>

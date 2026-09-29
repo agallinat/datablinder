@@ -62,6 +62,7 @@ runs unchanged on the real file.</p>
 <span>  output <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  blind_names <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  keep_labels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  keep_real <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rows <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -90,6 +91,15 @@ variable labels, which often describe sensitive content.</p></dd>
 <dt id="arg-keep-labels">keep_labels<a class="anchor" aria-label="anchor" href="#arg-keep-labels"></a></dt>
 <dd><p>Keep the real factor levels and category values, for when
 code has to filter on them. <code>FALSE</code> replaces them with <code>A</code>, <code>B</code>, <code>C</code>...</p></dd>
+
+
+<dt id="arg-keep-real">keep_real<a class="anchor" aria-label="anchor" href="#arg-keep-real"></a></dt>
+<dd><p>Names of columns to copy across <strong>unchanged, with their real
+values</strong>, for columns that carry no sensitive information and that code has
+to use as they are, such as a treatment arm or a study visit. These columns
+keep their real names even under <code>blind_names</code>, and are named in the summary
+and excluded from the leak check. Cannot be combined with <code>rows</code>. Use it
+sparingly: see the warning below.</p></dd>
 
 
 <dt id="arg-rows">rows<a class="anchor" aria-label="anchor" href="#arg-rows"></a></dt>
@@ -147,6 +157,26 @@ it wrote them. Code that depends on the content of free text, on a particular
 real value existing, or on a relationship between two columns will not work.</p>
     </div>
     <div class="section level2">
+    <h2 id="columns-kept-real">Columns kept real<a class="anchor" aria-label="anchor" href="#columns-kept-real"></a></h2>
+
+
+<p><code>keep_real</code> names columns that are copied over untouched, so their real values
+end up in the shared copy. It exists because code often has to use a real
+value to be useful at all, as in <code>arm == "placebo"</code>, and hand-editing the
+blinded file back is worse than asking for it.</p>
+<p>It is also the one way to make this package disclose real data, so the
+decision is yours and it is worth making slowly:</p><ul><li><p>A column that is harmless by itself can still identify someone in
+combination with the others. A real date of birth, postcode or site, next to
+a real sex and a real visit date, can be enough, even with every name
+blinded.</p></li>
+<li><p>The rows still line up. A kept column stays matched to the rest of its row,
+which is why <code>rows</code> cannot be used at the same time.</p></li>
+<li><p>The summary says which columns were kept, and the leak check cannot vouch
+for them. Read both before sharing the file.</p></li>
+</ul><p>The safe default is not to use it. If a column is only needed for its
+categories and not its contents, <code>keep_labels</code> is usually enough.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="blind_data.html">blind_data()</a></code> to do the same to a data frame.</p></div>
     </div>
@@ -156,7 +186,7 @@ real value existing, or on a relationship between two columns will not work.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">csv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"cars.csv"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="va">csv</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">blind_file</span><span class="op">(</span><span class="va">csv</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Blinded copy written to /tmp/RtmpIpDV7f/cars_blinded.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Blinded copy written to /tmp/RtmpEtPg16/cars_blinded.csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   mpg   numeric  numeric, synthetic values</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cyl   integer  discrete numbers, same values</span>

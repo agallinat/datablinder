@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Alex Gallinat**. Author, maintainer.
+- **Alex Gallinat**. Author, maintainer, copyright holder.
 
 ## Citation
 

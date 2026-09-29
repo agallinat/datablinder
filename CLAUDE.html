@@ -44,11 +44,11 @@
 <div class="section level2">
 <h2 id="principles">Principles<a class="anchor" aria-label="anchor" href="#principles"></a></h2>
 <ul><li>
-<strong>Keep it simple.</strong> Four exported functions (<code>blind_file</code>, <code>blind_data</code>, <code>run_app</code>, <code>install_cli</code>) and four options. Don’t add arguments, config files, reports or abstractions SPEC.md doesn’t ask for. If something seems missing, propose it; don’t build it.</li>
+<strong>Keep it simple.</strong> Four exported functions (<code>blind_file</code>, <code>blind_data</code>, <code>run_app</code>, <code>install_cli</code>) and five options. Don’t add arguments, config files, reports or abstractions SPEC.md doesn’t ask for. If something seems missing, propose it; don’t build it.</li>
 <li>
 <strong>Code written for the blinded data must run on the real data.</strong> Never change a column’s class or type; decide types by values, not only by storage class.</li>
 <li>
-<strong>No real value in the output</strong> unless <code>keep_labels = TRUE</code>.</li>
+<strong>No real value in the output</strong> unless <code>keep_labels = TRUE</code>, or the column was named in <code>keep_real</code>. A column kept real must be named in the summary and on the leak check line; a bare “Leak check: passed” must never appear when part of the output is real.</li>
 <li>
 <strong>Never print real data values</strong> in messages, warnings, errors, tests or snapshots. Refer to column names and row numbers only.</li>
 <li>

@@ -110,7 +110,7 @@ text, an identifier blinded as a category. Those are the cases to
 catch.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">summary</span></span>
-<span><span class="co">#&gt; Blinded copy written to /tmp/RtmpgrgDK7/patients_blinded.csv</span></span>
+<span><span class="co">#&gt; Blinded copy written to /tmp/RtmpxCpcbp/patients_blinded.csv</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   patient_id  character  new IDs, same shape (A-00000)</span></span>
 <span><span class="co">#&gt;   age         integer    numeric, synthetic values</span></span>
@@ -124,7 +124,7 @@ catch.</p>
 chat. Get it as plain lines with <code><a href="https://rdrr.io/r/base/format.html" class="external-link">format()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">summary</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Blinded copy written to /tmp/RtmpgrgDK7/patients_blinded.csv"</span></span>
+<span><span class="co">#&gt; [1] "Blinded copy written to /tmp/RtmpxCpcbp/patients_blinded.csv"</span></span>
 <span><span class="co">#&gt; [2] ""                                                            </span></span>
 <span><span class="co">#&gt; [3] "  patient_id  character  new IDs, same shape (A-00000)"</span></span></code></pre></div>
 <p>One thing to look at before you paste: the first line is the path the
@@ -189,7 +189,7 @@ is an artefact.</p>
 correct as a <em>shape</em>. That is the whole trade.</p>
 </div>
 <div class="section level2">
-<h2 id="three-options-that-come-up-in-this-workflow">Three options that come up in this workflow<a class="anchor" aria-label="anchor" href="#three-options-that-come-up-in-this-workflow"></a>
+<h2 id="four-options-that-come-up-in-this-workflow">Four options that come up in this workflow<a class="anchor" aria-label="anchor" href="#four-options-that-come-up-in-this-workflow"></a>
 </h2>
 <p><code>keep_labels = TRUE</code> when the code has to filter on real
 category values. By default <code>region</code> becomes <code>A</code>,
@@ -209,9 +209,31 @@ confidential part. They become <code>col_01</code>, <code>col_02</code>,
 and SPSS or Stata variable labels are dropped too, since those often
 describe sensitive content. The cost is that the assistant no longer
 knows what anything means.</p>
+<p><code>keep_real</code> when the code cannot be written without a
+whole column as it is: a treatment arm, a study visit, a site. Those
+columns are copied over untouched, so they are genuinely shared, which
+makes this the one option that discloses real data:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">trial</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  arm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"placebo"</span>, <span class="st">"active"</span><span class="op">)</span>, <span class="fl">20</span><span class="op">)</span>,</span>
+<span>  score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">41.2</span>, <span class="fl">60.7</span>, length.out <span class="op">=</span> <span class="fl">40</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">blinded</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/blind_data.html">blind_data</a></span><span class="op">(</span><span class="va">trial</span>, keep_real <span class="op">=</span> <span class="st">"arm"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">blinded</span><span class="op">$</span><span class="va">arm</span><span class="op">)</span>            <span class="co"># real, so the assistant can filter on it</span></span>
+<span><span class="co">#&gt; [1] "placebo" "active"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">blinded</span><span class="op">$</span><span class="va">score</span>, <span class="va">trial</span><span class="op">$</span><span class="va">score</span><span class="op">)</span>  <span class="co"># and everything else is still fake</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p>The summary names every column kept, and the leak check says plainly
+that it cannot vouch for them. Use it only for columns that identify
+nobody, on their own or beside the others, and read
+<code><a href="../articles/limits.html">vignette("limits")</a></code> first. If you only need the categories
+and not the contents, <code>keep_labels = TRUE</code> is the lighter
+tool.</p>
 <p><code>rows</code> when the real file is too short to detect types
 well, or when the code you expect back needs more room to work: on five
-rows there is little to tell an identifier from a measurement.</p>
+rows there is little to tell an identifier from a measurement. It cannot
+be combined with <code>keep_real</code>, since a kept column stays
+matched to the rest of its row.</p>
 </div>
 <div class="section level2">
 <h2 id="doing-it-without-writing-r">Doing it without writing R<a class="anchor" aria-label="anchor" href="#doing-it-without-writing-r"></a>
@@ -222,7 +244,7 @@ press <strong>Blind</strong>, read the summary, copy it with one button,
 download the copy. In RStudio it is also under <em>Addins</em> &gt;
 <em>Blind a data file</em>.</p>
 <p>From a terminal, with nothing to install beyond the package:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'datablinder::blind_file("patients.csv")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'datablinder::blind_file("patients.csv")'</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="before-you-send-it">Before you send it<a class="anchor" aria-label="anchor" href="#before-you-send-it"></a>

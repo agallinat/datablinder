@@ -117,23 +117,57 @@ will find the command, and what to add to your `PATH` if it will not.
 
 ``` bash
 datablinder patients.csv --blind-names --rows 200 --seed 42
+datablinder trial.csv --keep-real arm,visit
 datablinder --help
 ```
 
 The exit status is non-zero if the file cannot be read or written, or if
 the leak check fails.
 
-## The four options
+## The five options
 
 | Argument | Default | What it does |
 |----|----|----|
 | `blind_names` | `FALSE` | Rename the columns to `col_01`, `col_02`… and drop SPSS/Stata variable labels, which often describe sensitive content |
 | `keep_labels` | `FALSE` | `FALSE`: category values and factor levels become `A`, `B`, `C`… `TRUE`: keep the real ones, for when code must filter on them (`region == "North"`) |
+| `keep_real` | `NULL` | Names of columns to copy over **unblinded, with their real values**. For a column that carries nothing sensitive and that code has to use as it is, such as a treatment arm or a study visit. Cannot be combined with `rows`. Read the note below |
 | `rows` | `NULL` | How many rows to generate. `NULL` means as many as the input |
 | `seed` | `NULL` | A seed, for a copy that can be reproduced. Your session’s `.Random.seed` is put back as it was found |
 
 That is the whole interface. Detection thresholds are internal
 constants, and there is no configuration file.
+
+### `keep_real`, and what it costs
+
+Sometimes code cannot be written without a real value:
+`arm == "placebo"`, `group_by(site)`. `keep_real` names the columns to
+leave alone.
+
+``` r
+
+blind_file("trial.csv", keep_real = c("arm", "visit"))
+```
+
+Those two columns come out exactly as they went in, still lined up with
+their own rows, and keeping their real names even under
+`blind_names = TRUE`. Everything else is blinded as usual.
+
+It is the one way to make this package disclose real data, so it is
+worth a moment’s thought:
+
+- A column that is harmless by itself can still identify someone in
+  combination with the others. A real postcode, date of birth or site,
+  next to a real sex and a real visit date, can be enough even with
+  every name blinded.
+- The leak check cannot vouch for a kept column and does not pretend to.
+  It reports them instead, so the summary reads
+  `Leak check: passed, except 2 columns kept real: arm, visit`, and each
+  kept column’s own line reads `REAL VALUES KEPT, not blinded`.
+- `rows` cannot be used at the same time, because a kept column stays
+  matched to the rest of its row.
+
+If a column is only needed for its categories and not its contents,
+`keep_labels = TRUE` is usually enough and keeps no values.
 
 ## Files it reads and writes
 
@@ -211,6 +245,11 @@ Read this part.
   case to catch, and the summary is where you see it.
 - **`keep_labels = TRUE` keeps real category labels.** Only use it when
   those labels are not themselves sensitive.
+- **`keep_real` keeps whole columns.** Every value in a column you name
+  is shared as it is. Use it for the columns that carry nothing
+  sensitive and that the code cannot be written without, check them
+  against the rest of the table before you share the file, and leave it
+  alone otherwise.
 - **The blinded data is for writing code, not for analysis.** Since
   columns are blinded independently, no correlation, model coefficient,
   group difference or cross-tabulation on the copy means anything about

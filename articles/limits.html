@@ -146,7 +146,8 @@ existing.</strong> By default category values become <code>A</code>,
 <code>B</code>, <code>C</code>, so <code>region == "North"</code>
 matches nothing. That is what <code>keep_labels = TRUE</code> is for,
 and it keeps real labels — only use it when the labels are not
-themselves sensitive.</li>
+themselves sensitive. When the code needs a whole column as it is,
+<code>keep_real</code> is the heavier tool; see below.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -178,6 +179,39 @@ character, factor, label and identifier — are checked for zero overlap,
 and a single match there fails the run.</p>
 </div>
 <div class="section level2">
+<h2 id="keep_real-is-the-one-place-the-promise-is-switched-off">
+<code>keep_real</code> is the one place the promise is switched
+off<a class="anchor" aria-label="anchor" href="#keep_real-is-the-one-place-the-promise-is-switched-off"></a>
+</h2>
+<p>Everything above assumes the default, which keeps no real value.
+<code>keep_real</code> names columns to copy over exactly as they are,
+because code often cannot be written at all without one:
+<code>arm == "placebo"</code>, <code>group_by(site)</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/blind_file.html">blind_file</a></span><span class="op">(</span><span class="st">"trial.csv"</span>, keep_real <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"arm"</span>, <span class="st">"visit"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Those columns are shared. That is the point of the option and the
+cost of it, so it is worth being deliberate:</p>
+<ul>
+<li>A column that is harmless by itself can still identify someone in
+combination with the others. A real postcode, date of birth or site,
+beside a real sex and a real visit date, can be enough even with every
+name blinded. This is exactly the territory <code>sdcMicro</code> is
+built for; see <code><a href="../articles/alternatives.html">vignette("alternatives")</a></code>.</li>
+<li>The leak check cannot vouch for a kept column. It says so rather
+than implying otherwise: the verdict line reads
+<code>Leak check: passed, except 2 columns kept real: arm, visit</code>,
+and each kept column’s own line reads
+<code>REAL VALUES KEPT, not blinded</code>. A bare
+<code>Leak check: passed</code> never appears when part of the file is
+real.</li>
+<li>
+<code>rows</code> cannot be used at the same time, because a kept
+column stays matched to the rest of its row.</li>
+</ul>
+<p>If a column is only needed for its categories and not its contents,
+<code>keep_labels = TRUE</code> does the job and keeps no values.</p>
+</div>
+<div class="section level2">
 <h2 id="what-the-package-never-does">What the package never does<a class="anchor" aria-label="anchor" href="#what-the-package-never-does"></a>
 </h2>
 <ul>
@@ -187,7 +221,9 @@ happen on your machine; the app runs on <code>127.0.0.1</code>. Sharing
 the blinded file with an assistant is something you do afterwards,
 deliberately.</li>
 <li>No real value in the output, except category labels under
-<code>keep_labels = TRUE</code>.</li>
+<code>keep_labels = TRUE</code> and the columns you name in
+<code>keep_real</code>, both of which are off by default and reported in
+the summary when used.</li>
 <li>No real data value in any message, warning or error. Problems are
 reported by column name and row number only.</li>
 <li>No change to your session’s random number state:
@@ -197,9 +233,10 @@ reported by column name and row number only.</li>
 <div class="section level2">
 <h2 id="not-in-this-version">Not in this version<a class="anchor" aria-label="anchor" href="#not-in-this-version"></a>
 </h2>
-<p>Preserving relationships between columns, per-column overrides,
-reading from a database, and complex objects such as <code>Seurat</code>
-or <code>SingleCellExperiment</code>.</p>
+<p>Preserving relationships between columns, reading from a database,
+and complex objects such as <code>Seurat</code> or
+<code>SingleCellExperiment</code>. Per-column control stops at
+<code>keep_real</code>: whether to blind a column, but not how.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

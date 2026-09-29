@@ -76,9 +76,9 @@ blinded data, and of it only, to paste into a chat along with the file.</p>
     <h2 id="the-options">The options<a class="anchor" aria-label="anchor" href="#the-options"></a></h2>
 
 
-<p>Four, the same everywhere: <code>blind_names</code>, <code>keep_labels</code>, <code>rows</code> and <code>seed</code>,
-described in <code><a href="blind_data.html">blind_data()</a></code>. Detection thresholds are internal constants, and
-there is no configuration file.</p>
+<p>Five, the same everywhere: <code>blind_names</code>, <code>keep_labels</code>, <code>keep_real</code>, <code>rows</code>
+and <code>seed</code>, described in <code><a href="blind_data.html">blind_data()</a></code>. Detection thresholds are internal
+constants, and there is no configuration file.</p>
     </div>
     <div class="section level2">
     <h2 id="limits">Limits<a class="anchor" aria-label="anchor" href="#limits"></a></h2>
@@ -92,6 +92,10 @@ code work.</p></li>
 <li><p>Read the summary before sharing the file. It is the list of decisions the
 package made, and a column blinded as a category when it is really an
 identifier is the case to catch.</p></li>
+<li><p><code>keep_real</code> turns the promise off for the columns it names: those are shared
+exactly as they are. A column that is harmless by itself can still identify
+someone next to the others, so the summary names every column kept, and the
+leak check says it cannot vouch for them.</p></li>
 <li><p>The blinded data is for writing code, not for analysis. Columns are blinded
 independently, so no correlation, model coefficient or cross-tabulation on
 the copy means anything about the real data.</p></li>
@@ -107,7 +111,7 @@ the blinded file with an AI is a thing you do afterwards, deliberately.</p></li>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
-    <p><strong>Maintainer</strong>: Alex Gallinat <a href="mailto:baloo.142@gmail.com">baloo.142@gmail.com</a></p>
+    <p><strong>Maintainer</strong>: Alex Gallinat <a href="mailto:baloo.142@gmail.com">baloo.142@gmail.com</a> [copyright holder]</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

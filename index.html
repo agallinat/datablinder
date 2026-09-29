@@ -133,12 +133,13 @@ F-753189,05/07/2023,27,B,A,0,61,user_kw07@example.com</code></pre>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'datablinder::blind_file("patients.csv")'</span></span></code></pre></div>
 <p>If you do this often, <code><a href="reference/install_cli.html">install_cli()</a></code> copies a small wrapper script into a directory on your <code>PATH</code> (and writes the <code>.cmd</code> shim Windows needs). It never uses <code>sudo</code> and never edits a shell configuration file; it tells you plainly whether the shell will find the command, and what to add to your <code>PATH</code> if it will not.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="ex">datablinder</span> patients.csv <span class="at">--blind-names</span> <span class="at">--rows</span> 200 <span class="at">--seed</span> 42</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="ex">datablinder</span> <span class="at">--help</span></span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="ex">datablinder</span> trial.csv <span class="at">--keep-real</span> arm,visit</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="ex">datablinder</span> <span class="at">--help</span></span></code></pre></div>
 <p>The exit status is non-zero if the file cannot be read or written, or if the leak check fails.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="the-four-options">The four options<a class="anchor" aria-label="anchor" href="#the-four-options"></a>
+<h2 id="the-five-options">The five options<a class="anchor" aria-label="anchor" href="#the-five-options"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -164,6 +165,11 @@ F-753189,05/07/2023,27,B,A,0,61,user_kw07@example.com</code></pre>
 <code>FALSE</code>: category values and factor levels become <code>A</code>, <code>B</code>, <code>C</code>… <code>TRUE</code>: keep the real ones, for when code must filter on them (<code>region == "North"</code>)</td>
 </tr>
 <tr>
+<td><code>keep_real</code></td>
+<td><code>NULL</code></td>
+<td>Names of columns to copy over <strong>unblinded, with their real values</strong>. For a column that carries nothing sensitive and that code has to use as it is, such as a treatment arm or a study visit. Cannot be combined with <code>rows</code>. Read the note below</td>
+</tr>
+<tr>
 <td><code>rows</code></td>
 <td><code>NULL</code></td>
 <td>How many rows to generate. <code>NULL</code> means as many as the input</td>
@@ -176,6 +182,23 @@ F-753189,05/07/2023,27,B,A,0,61,user_kw07@example.com</code></pre>
 </tbody>
 </table>
 <p>That is the whole interface. Detection thresholds are internal constants, and there is no configuration file.</p>
+<div class="section level3">
+<h3 id="keep_real-and-what-it-costs">
+<code>keep_real</code>, and what it costs<a class="anchor" aria-label="anchor" href="#keep_real-and-what-it-costs"></a>
+</h3>
+<p>Sometimes code cannot be written without a real value: <code>arm == "placebo"</code>, <code>group_by(site)</code>. <code>keep_real</code> names the columns to leave alone.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/blind_file.html">blind_file</a></span><span class="op">(</span><span class="st">"trial.csv"</span>, keep_real <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"arm"</span>, <span class="st">"visit"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Those two columns come out exactly as they went in, still lined up with their own rows, and keeping their real names even under <code>blind_names = TRUE</code>. Everything else is blinded as usual.</p>
+<p>It is the one way to make this package disclose real data, so it is worth a moment’s thought:</p>
+<ul>
+<li>A column that is harmless by itself can still identify someone in combination with the others. A real postcode, date of birth or site, next to a real sex and a real visit date, can be enough even with every name blinded.</li>
+<li>The leak check cannot vouch for a kept column and does not pretend to. It reports them instead, so the summary reads <code>Leak check: passed, except 2 columns kept real: arm, visit</code>, and each kept column’s own line reads <code>REAL VALUES KEPT, not blinded</code>.</li>
+<li>
+<code>rows</code> cannot be used at the same time, because a kept column stays matched to the rest of its row.</li>
+</ul>
+<p>If a column is only needed for its categories and not its contents, <code>keep_labels = TRUE</code> is usually enough and keeps no values.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="files-it-reads-and-writes">Files it reads and writes<a class="anchor" aria-label="anchor" href="#files-it-reads-and-writes"></a>
@@ -299,6 +322,8 @@ Exact numeric or date coincidences: 33 (expected with rounded values and shifted
 <li>
 <strong><code>keep_labels = TRUE</code> keeps real category labels.</strong> Only use it when those labels are not themselves sensitive.</li>
 <li>
+<strong><code>keep_real</code> keeps whole columns.</strong> Every value in a column you name is shared as it is. Use it for the columns that carry nothing sensitive and that the code cannot be written without, check them against the rest of the table before you share the file, and leave it alone otherwise.</li>
+<li>
 <strong>The blinded data is for writing code, not for analysis.</strong> Since columns are blinded independently, no correlation, model coefficient, group difference or cross-tabulation on the copy means anything about the real data. Results will be structurally similar and numerically meaningless.</li>
 <li>
 <strong>Code that depends on the content of free text will not work.</strong> Free text becomes placeholder words. Neither will code that relies on relationships between columns, or on a particular real value existing.</li>
@@ -361,7 +386,7 @@ Exact numeric or date coincidences: 33 (expected with rounded values and shifted
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Alex Gallinat <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Alex Gallinat <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
 </ul>
 </div>
 

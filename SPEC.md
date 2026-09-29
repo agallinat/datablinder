@@ -12,7 +12,7 @@ and file type, with roughly similar values, but every value is fake. The
 user shares the blinded file with the AI or a collaborator, gets working
 code back, and runs that code on the real data.
 
-**Simplicity is the main design goal.** Input → output, four options, no
+**Simplicity is the main design goal.** Input → output, five options, no
 configuration files, no reports, no network access, no AI or LLM calls
 of any kind.
 
@@ -78,16 +78,45 @@ It is printed in the console and shown in the app with a *Copy* button,
 so it can be pasted into a chat to give the AI context. It is a
 `blind_summary` object with a `print` method.
 
-## 4. The four options
+## 4. The five options
 
 | Argument | Default | Meaning |
 |----|----|----|
 | `blind_names` | `FALSE` | Rename columns to `col_01, col_02…`. Variable labels (SPSS/Stata) are removed too, since they often describe sensitive content |
 | `keep_labels` | `FALSE` | `FALSE`: factor levels and category values become `A, B, C…`. `TRUE`: real labels kept, for when code must filter on them (`region == "North"`) and the labels aren’t sensitive |
+| `keep_real` | `NULL` (nothing kept) | Names of columns copied over **unblinded, with their real values**, for a column that carries nothing sensitive and that code has to use as it is, such as a treatment arm or a study visit. See section 4.1 |
 | `rows` | `NULL` (same as input) | Number of rows to generate |
 | `seed` | `NULL` (random) | For a reproducible blinded file |
 
 Detection thresholds are internal constants, not options.
+
+### 4.1 `keep_real`
+
+This is the only option that makes the package disclose real data, so it
+is deliberately narrow, loud and easy to leave alone:
+
+- The default is `NULL`: nothing is kept, and the output contains no
+  real value.
+- A name the data does not have is an error naming that name, before
+  anything is written. For a workbook a name has to exist on some sheet,
+  and is kept on every sheet that has it.
+- A kept column keeps **its real name too**, even under
+  `blind_names = TRUE`: a real value under the name `col_07` is of no
+  use to anyone writing code. The other columns keep their positional
+  numbering, so `col_01, arm, col_03` is the expected shape, gap
+  included.
+- `keep_real` and `rows` **cannot be combined**: a kept column stays
+  matched to the rest of its row, which only works at the input’s row
+  count. Using both is an error, not a silent resample.
+- The leak check cannot vouch for a kept column, so it does not pretend
+  to. Each one is reported instead: the column’s line in the summary
+  reads `REAL VALUES KEPT, not blinded`, and the verdict line reads
+  `Leak check: passed, except 2 columns kept real: arm, site`. A bare
+  `Leak check: passed` must never appear when part of the file is real.
+- The documentation says, in one place and plainly, that a column
+  harmless on its own can still identify someone next to the others, and
+  that `keep_labels` is usually enough when only the categories are
+  needed.
 
 ## 5. How each column is blinded
 
@@ -120,18 +149,22 @@ Other things preserved: column order, the object class (`data.frame`,
 ## 6. Safety rules
 
 - No real value appears in the output, except category labels when
-  `keep_labels = TRUE`. A **leak check** runs after every blinding:
-  character, factor, label and identifier columns must have zero overlap
-  with the original (hard failure); exact numeric matches are counted
-  and reported (a few coincidences can happen with rounded data).
+  `keep_labels = TRUE` and the columns named by `keep_real`. A **leak
+  check** runs after every blinding: character, factor, label and
+  identifier columns must have zero overlap with the original (hard
+  failure); exact numeric matches are counted and reported (a few
+  coincidences can happen with rounded data); columns named by
+  `keep_real` are excused from the check and named in the summary
+  instead, so that the verdict never claims more than it means.
 - Real data values are never printed in messages, warnings or errors;
   refer to column names and row numbers only.
 - No network access anywhere in the package.
 - The RNG must not disturb the user’s session: save and restore
   `.Random.seed` around any seeded work.
 - README, help pages and the app state plainly that this reduces
-  disclosure risk but gives no formal privacy guarantee, and that column
-  structure and row counts remain visible.
+  disclosure risk but gives no formal privacy guarantee, that column
+  structure and row counts remain visible, and that a column named by
+  `keep_real` is shared as it is.
 
 ## 7. Interfaces
 
@@ -141,6 +174,7 @@ Other things preserved: column order, the object class (`data.frame`,
 
 blind_file("patients.xlsx")                          # → patients_blinded.xlsx, returns the summary
 blind_file("data.sav", output = "shared/fake.sav", blind_names = TRUE, rows = 200, seed = 1)
+blind_file("trial.csv", keep_real = c("arm", "visit"))  # those two shared as they are
 fake <- blind_data(my_df, keep_labels = TRUE)       # data frame in, data frame out (summary as attribute)
 run_app()                                            # open the Shiny app
 install_cli()                                        # put the `datablinder` command on the PATH
@@ -162,12 +196,15 @@ machine.
 Layout
 ([`bslib::page_sidebar`](https://rstudio.github.io/bslib/reference/page_sidebar.html)): -
 **Sidebar**: file upload; checkboxes *Blind column names* and *Keep
-category labels*; numeric inputs *Rows* (empty = same) and *Seed* (empty
-= random); a **Blind** button; a **Download blinded file** button that
-appears when done. - **Main area**: the summary with a *Copy* button (a
-few lines of JavaScript, no extra package), and a preview of the first
-10 rows of the blinded data only. - A short note at the bottom: what the
-tool does and doesn’t guarantee.
+category labels*; a multi-select *Keep real (not blinded)*, filled with
+the uploaded file’s column names (read from the header alone, so a large
+file is not read twice) and empty by default; numeric inputs *Rows*
+(empty = same) and *Seed* (empty = random); a **Blind** button; a
+**Download blinded file** button that appears when done. - **Main
+area**: the summary with a *Copy* button (a few lines of JavaScript, no
+extra package), and a preview of the first 10 rows of the blinded data
+only. - A short note at the bottom: what the tool does and doesn’t
+guarantee.
 
 Details: raise `shiny.maxRequestSize` (e.g. 1 GB) inside
 [`run_app()`](https://agallinat.github.io/datablinder/reference/run_app.md);
@@ -187,9 +224,11 @@ dependency):
 
 ``` bash
 datablinder patients.csv --blind-names --rows 200 --seed 42
+datablinder trial.csv --keep-real arm,visit
 ```
 
-The four options plus `--output`, `--help` and `--version`. Exit status
+The five options plus `--output`, `--help` and `--version`;
+`--keep-real` takes a comma separated list of column names. Exit status
 is non-zero if the leak check fails, or if the file cannot be read or
 written.
 
@@ -227,7 +266,7 @@ everywhere the package does.
         cli.R            # the command line wrapper's logic, tested without a shell
         install_cli.R    # exported: put the command where the shell can find it
         io.R             # read/write per format, remembering format details
-        detect.R         # column type detection + thresholds
+        detect.R         # column type detection + thresholds; keep_real marked on the spec
         blinders.R       # one function per detected type
         check.R          # leak check
         summary.R        # blind_summary object and print method
@@ -281,7 +320,13 @@ everywhere the package does.
 
 ## 11. Not in v1
 
-Preserving relationships between columns, per-column overrides, database
-input, and complex objects (Seurat, SingleCellExperiment, FASTQ). Keep
-`detect.R` and `blinders.R` independent of `io.R` so these can be added
-later.
+Preserving relationships between columns, database input, and complex
+objects (Seurat, SingleCellExperiment, FASTQ). Keep `detect.R` and
+`blinders.R` independent of `io.R` so these can be added later.
+
+Per-column control is limited to `keep_real`, which is all of one: blind
+this column, or don’t. Choosing *how* a column is blinded — forcing a
+detected type, giving a numeric range, supplying a list of categories —
+stays out. It would mean a configuration file for anything beyond a toy
+case, and the detection is meant to be read and corrected in the
+summary, not configured up front.

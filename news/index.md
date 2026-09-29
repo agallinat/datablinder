@@ -23,6 +23,19 @@ First public release.
   the leak check that runs before anything is written, and the
   `blind_summary` object printed after every run.
 
+- `keep_real`, the fifth option: the names of columns to copy over
+  unblinded, with their real values, for a column that carries nothing
+  sensitive and that code has to use as it is, such as a treatment arm
+  or a study visit. A kept column stays lined up with its own rows and
+  keeps its real name even under `blind_names`, which is why it cannot
+  be combined with `rows`. Being the one way to make the package
+  disclose real data, it is reported rather than assumed safe: the leak
+  check excuses those columns and names them, so the verdict reads
+  `Leak check: passed, except 2 columns kept real: arm, visit` instead
+  of a bare `passed`, and each kept column’s own line reads
+  `REAL VALUES KEPT, not blinded`. Naming a column the data does not
+  have is an error before anything is written.
+
 - SPSS (`.sav`, `.zsav`), Stata (`.dta`), `.rds` and Parquet files,
   keeping value labels, variable labels and display formats, and the
   class of the data frame stored in an `.rds`. Parquet needs the
@@ -30,18 +43,20 @@ First public release.
   treated as the code it is, not as a missing value.
 
 - [`run_app()`](https://agallinat.github.io/datablinder/reference/run_app.md),
-  a Shiny app on `127.0.0.1` with the four options, the summary and a
-  *Copy* button, a preview of the first ten blinded rows (one sheet at a
-  time for a workbook) and a download button. Uploads of up to 1 GB are
-  allowed, the browser’s copy of the upload is deleted as soon as the
-  app has its own, and that copy goes when the session ends. Also an
-  RStudio addin, *Blind a data file*, that opens the app.
+  a Shiny app on `127.0.0.1` with the five options, the summary and a
+  *Copy* button. The *Keep real* box lists the uploaded file’s columns
+  to choose from, read from the file’s header alone so that a large file
+  is not read twice. Then a preview of the first ten blinded rows (one
+  sheet at a time for a workbook) and a download button. Uploads of up
+  to 1 GB are allowed, the browser’s copy of the upload is deleted as
+  soon as the app has its own, and that copy goes when the session ends.
+  Also an RStudio addin, *Blind a data file*, that opens the app.
 
-- A command line wrapper, `inst/scripts/datablinder`, with the four
-  options plus `--output`, `--help` and `--version`. The summary goes to
-  standard output and anything that went wrong to standard error, with
-  an exit status of 1 if the file could not be blinded or the leak check
-  failed.
+- A command line wrapper, `inst/scripts/datablinder`, with the five
+  options plus `--output`, `--help` and `--version`; `--keep-real` takes
+  a comma separated list of column names. The summary goes to standard
+  output and anything that went wrong to standard error, with an exit
+  status of 1 if the file could not be blinded or the leak check failed.
 
 - [`install_cli()`](https://agallinat.github.io/datablinder/reference/install_cli.md),
   which puts that command where the shell can find it on macOS, Linux
@@ -54,15 +69,15 @@ First public release.
 - A README that leads with the one promise the package makes, shows the
   three ways to run it, and says plainly in a *Limits* section what the
   blinded copy does not give you: no formal privacy guarantee, a
-  structure that stays visible on purpose, and no meaning in any
-  analysis of the copy, since columns are blinded independently. It
-  credits FakeDataR for the ideas borrowed from it. `R CMD check` runs
-  clean.
+  structure that stays visible on purpose, no meaning in any analysis of
+  the copy, since columns are blinded independently, and whole columns
+  shared as they are if `keep_real` names them. It credits FakeDataR for
+  the ideas borrowed from it. `R CMD check` runs clean.
 
 - Help pages that stand on their own, for anyone who never sees the
   README:
   [`?datablinder`](https://agallinat.github.io/datablinder/reference/datablinder-package.md)
-  gives the promise, the four functions, the four options and the
+  gives the promise, the four functions, the five options and the
   limits;
   [`?blind_data`](https://agallinat.github.io/datablinder/reference/blind_data.md)
   and

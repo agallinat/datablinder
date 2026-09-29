@@ -14,6 +14,7 @@ blind_file(
   output = NULL,
   blind_names = FALSE,
   keep_labels = FALSE,
+  keep_real = NULL,
   rows = NULL,
   seed = NULL
 )
@@ -41,6 +42,15 @@ blind_file(
 
   Keep the real factor levels and category values, for when code has to
   filter on them. `FALSE` replaces them with `A`, `B`, `C`...
+
+- keep_real:
+
+  Names of columns to copy across **unchanged, with their real values**,
+  for columns that carry no sensitive information and that code has to
+  use as they are, such as a treatment arm or a study visit. These
+  columns keep their real names even under `blind_names`, and are named
+  in the summary and excluded from the leak check. Cannot be combined
+  with `rows`. Use it sparingly: see the warning below.
 
 - rows:
 
@@ -108,6 +118,30 @@ the way it wrote them. Code that depends on the content of free text, on
 a particular real value existing, or on a relationship between two
 columns will not work.
 
+## Columns kept real
+
+`keep_real` names columns that are copied over untouched, so their real
+values end up in the shared copy. It exists because code often has to
+use a real value to be useful at all, as in `arm == "placebo"`, and
+hand-editing the blinded file back is worse than asking for it.
+
+It is also the one way to make this package disclose real data, so the
+decision is yours and it is worth making slowly:
+
+- A column that is harmless by itself can still identify someone in
+  combination with the others. A real date of birth, postcode or site,
+  next to a real sex and a real visit date, can be enough, even with
+  every name blinded.
+
+- The rows still line up. A kept column stays matched to the rest of its
+  row, which is why `rows` cannot be used at the same time.
+
+- The summary says which columns were kept, and the leak check cannot
+  vouch for them. Read both before sharing the file.
+
+The safe default is not to use it. If a column is only needed for its
+categories and not its contents, `keep_labels` is usually enough.
+
 ## See also
 
 [`blind_data()`](https://agallinat.github.io/datablinder/reference/blind_data.md)
@@ -119,7 +153,7 @@ to do the same to a data frame.
 csv <- file.path(tempdir(), "cars.csv")
 write.csv(mtcars, csv, row.names = FALSE)
 blind_file(csv, seed = 1)
-#> Blinded copy written to /tmp/RtmpIpDV7f/cars_blinded.csv
+#> Blinded copy written to /tmp/RtmpEtPg16/cars_blinded.csv
 #> 
 #>   mpg   numeric  numeric, synthetic values
 #>   cyl   integer  discrete numbers, same values

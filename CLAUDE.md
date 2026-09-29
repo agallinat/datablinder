@@ -9,13 +9,16 @@ the source of truth.
 ## Principles
 
 - **Keep it simple.** Four exported functions (`blind_file`,
-  `blind_data`, `run_app`, `install_cli`) and four options. Don’t add
+  `blind_data`, `run_app`, `install_cli`) and five options. Don’t add
   arguments, config files, reports or abstractions SPEC.md doesn’t ask
   for. If something seems missing, propose it; don’t build it.
 - **Code written for the blinded data must run on the real data.** Never
   change a column’s class or type; decide types by values, not only by
   storage class.
-- **No real value in the output** unless `keep_labels = TRUE`.
+- **No real value in the output** unless `keep_labels = TRUE`, or the
+  column was named in `keep_real`. A column kept real must be named in
+  the summary and on the leak check line; a bare “Leak check: passed”
+  must never appear when part of the output is real.
 - **Never print real data values** in messages, warnings, errors, tests
   or snapshots. Refer to column names and row numbers only.
 - **No network access and no LLM/AI calls**, anywhere.

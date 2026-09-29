@@ -51,7 +51,7 @@ text, an identifier blinded as a category. Those are the cases to catch.
 ``` r
 
 summary
-#> Blinded copy written to /tmp/RtmpgrgDK7/patients_blinded.csv
+#> Blinded copy written to /tmp/RtmpxCpcbp/patients_blinded.csv
 #> 
 #>   patient_id  character  new IDs, same shape (A-00000)
 #>   age         integer    numeric, synthetic values
@@ -70,7 +70,7 @@ Get it as plain lines with
 ``` r
 
 head(format(summary), 3)
-#> [1] "Blinded copy written to /tmp/RtmpgrgDK7/patients_blinded.csv"
+#> [1] "Blinded copy written to /tmp/RtmpxCpcbp/patients_blinded.csv"
 #> [2] ""                                                            
 #> [3] "  patient_id  character  new IDs, same shape (A-00000)"
 ```
@@ -142,7 +142,7 @@ nrow(analysis(real))                                    # and it runs on the rea
 The output from the blinded copy is meaningless as a result, and correct
 as a *shape*. That is the whole trade.
 
-## Three options that come up in this workflow
+## Four options that come up in this workflow
 
 `keep_labels = TRUE` when the code has to filter on real category
 values. By default `region` becomes `A`, `B`, `C`, and
@@ -167,9 +167,36 @@ They become `col_01`, `col_02`, and SPSS or Stata variable labels are
 dropped too, since those often describe sensitive content. The cost is
 that the assistant no longer knows what anything means.
 
+`keep_real` when the code cannot be written without a whole column as it
+is: a treatment arm, a study visit, a site. Those columns are copied
+over untouched, so they are genuinely shared, which makes this the one
+option that discloses real data:
+
+``` r
+
+trial <- data.frame(
+  arm = rep(c("placebo", "active"), 20),
+  score = round(seq(41.2, 60.7, length.out = 40), 1)
+)
+blinded <- blind_data(trial, keep_real = "arm", seed = 1)
+unique(blinded$arm)            # real, so the assistant can filter on it
+#> [1] "placebo" "active"
+identical(blinded$score, trial$score)  # and everything else is still fake
+#> [1] FALSE
+```
+
+The summary names every column kept, and the leak check says plainly
+that it cannot vouch for them. Use it only for columns that identify
+nobody, on their own or beside the others, and read
+[`vignette("limits")`](https://agallinat.github.io/datablinder/articles/limits.md)
+first. If you only need the categories and not the contents,
+`keep_labels = TRUE` is the lighter tool.
+
 `rows` when the real file is too short to detect types well, or when the
 code you expect back needs more room to work: on five rows there is
-little to tell an identifier from a measurement.
+little to tell an identifier from a measurement. It cannot be combined
+with `keep_real`, since a kept column stays matched to the rest of its
+row.
 
 ## Doing it without writing R
 
