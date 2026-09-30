@@ -18,8 +18,7 @@ This is a new submission.
 
 ## Notes for the reviewer
 
-Two things in this package are worth explaining up front, since both look like
-policy problems and I do not think either is one.
+Three things in this package are worth explaining up front.
 
 **`install_cli()` writes outside the session temporary directory.** That is the
 function's entire purpose: it copies a command line script out of the installed
@@ -50,6 +49,13 @@ The documentation states plainly, in the `DESCRIPTION`, the package help page,
 the README, a dedicated vignette and the app itself, that this reduces
 disclosure risk and offers no formal privacy guarantee. No formal privacy claim
 is made anywhere.
+
+**Some material is adapted from another package.** Parts of two column name word
+lists in `R/detect.R` are adapted from FakeDataR (MIT), along with three ideas
+credited in the README. Its author, Zobaer Ahmed, is listed in `Authors@R` as
+`ctb` and `cph`, and `inst/COPYRIGHTS` records what was adapted and reproduces
+the MIT notice that licence requires. Everything else in the package is my own
+work.
 
 ## Other details
 

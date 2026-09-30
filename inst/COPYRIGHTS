@@ -1,0 +1,33 @@
+The datablinder package as a whole is copyright (c) 2026 Alex Gallinat, released
+under the MIT licence recorded in DESCRIPTION and LICENSE.
+
+Material adapted from FakeDataR
+-------------------------------
+
+Parts of the column name word lists in R/detect.R, DB_IDENTIFIER_NAME_WORDS and
+DB_SENSITIVE_NAME_WORDS, are adapted from the FakeDataR package. Three ideas are
+also taken from it and credited in README.md: recognising sensitive columns by
+matching their names against a word list, printing a short description of the
+fake data to paste into a chat, and validating the copy against the original by
+comparing classes and missingness.
+
+FakeDataR is copyright (c) 2025 Zobaer Ahmed and is released under the MIT
+licence, reproduced here in full as that licence requires:
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.

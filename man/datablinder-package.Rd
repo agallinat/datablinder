@@ -73,5 +73,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Alex Gallinat \email{baloo.142@gmail.com} [copyright holder]
 
+Other contributors:
+\itemize{
+  \item Zobaer Ahmed (author of FakeDataR; see inst/COPYRIGHTS) [contributor, copyright holder]
+}
+
 }
 \keyword{internal}

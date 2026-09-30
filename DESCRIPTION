@@ -1,9 +1,11 @@
 Package: datablinder
 Title: Synthetic Look-Alike Copies of Sensitive Data Files
 Version: 0.1.0
-Authors@R:
+Authors@R: c(
     person("Alex", "Gallinat", role = c("aut", "cre", "cph"),
-           email = "baloo.142@gmail.com")
+           email = "baloo.142@gmail.com"),
+    person("Zobaer", "Ahmed", role = c("ctb", "cph"),
+           comment = "author of FakeDataR; see inst/COPYRIGHTS"))
 Description: Replaces the contents of a sensitive or proprietary data file with
     synthetic values while keeping the columns, classes, formats and file type
     identical, so that analysis code written against the anonymised copy runs

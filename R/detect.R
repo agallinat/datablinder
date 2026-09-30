@@ -55,7 +55,7 @@ DB_DATE_FORMATS <- c(
 
 # Column names matched against the name's words, so that "patient_id" and
 # "patientID" both hit "id". The idea and part of these lists come from
-# FakeDataR (MIT).
+# FakeDataR (MIT); see inst/COPYRIGHTS for the notice its licence requires.
 
 # Names that say "this column is a key". Enough on their own, repeats and all:
 # a long-format table has one patient_id per visit, and SPEC.md asks for a
