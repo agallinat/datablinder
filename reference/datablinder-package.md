@@ -78,3 +78,8 @@ Useful links:
 ## Author
 
 **Maintainer**: Alex Gallinat <baloo.142@gmail.com> \[copyright holder\]
+
+Other contributors:
+
+- Zobaer Ahmed (author of FakeDataR; see inst/COPYRIGHTS) \[contributor,
+  copyright holder\]

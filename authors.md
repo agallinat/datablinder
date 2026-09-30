@@ -4,6 +4,9 @@
 
 - **Alex Gallinat**. Author, maintainer, copyright holder.
 
+- **Zobaer Ahmed**. Contributor, copyright holder.  
+  author of FakeDataR; see inst/COPYRIGHTS
+
 ## Citation
 
 Source:
