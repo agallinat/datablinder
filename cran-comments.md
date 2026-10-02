@@ -11,10 +11,14 @@ This is a new submission.
 ## Test environments
 
 * local macOS 14 (aarch64), R 4.4.2
+* win-builder, R devel and R release
+* R-hub v2: Linux, Windows and macOS
 * GitHub Actions:
-  * macOS latest, R release
-  * Windows Server 2022, R release
-  * Ubuntu latest, R devel, release and oldrel-1
+  * `macos-latest`, R release
+  * `windows-latest`, R release
+  * `ubuntu-latest`, R devel, release and oldrel-1
+
+All clean apart from the new-submission note.
 
 ## Notes for the reviewer
 
