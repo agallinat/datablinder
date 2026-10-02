@@ -111,9 +111,10 @@ Rscript -e 'datablinder::blind_file("patients.csv")'
 If you do this often,
 [`install_cli()`](https://agallinat.github.io/datablinder/reference/install_cli.md)
 copies a small wrapper script into a directory on your `PATH` (and
-writes the `.cmd` shim Windows needs). It never uses `sudo` and never
-edits a shell configuration file; it tells you plainly whether the shell
-will find the command, and what to add to your `PATH` if it will not.
+writes the `.cmd` shim Windows needs). It shows you the directory and
+asks before writing anything, never uses `sudo` and never edits a shell
+configuration file; it then tells you plainly whether the shell will
+find the command, and what to add to your `PATH` if it will not.
 
 ``` bash
 datablinder patients.csv --blind-names --rows 200 --seed 42

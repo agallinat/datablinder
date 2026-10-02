@@ -19,7 +19,8 @@ install_cli(dir = NULL)
 
 ## Value
 
-The path of the installed command, invisibly.
+The path of the installed command, invisibly, or `NULL` invisibly if you
+decline.
 
 ## Details
 
@@ -40,6 +41,14 @@ package, so upgrading `datablinder` upgrades the command too. Run this
 again after upgrading R itself, which moves the `Rscript` the Windows
 shim points at.
 
+This is the only function in the package that writes a file anywhere
+permanent, so it asks before it does: it prints the directory and waits
+for `y`. Any other answer writes nothing, not even the directory. Called
+where there is nobody to ask, in a script or `Rscript -e`, it is an
+error rather than a silent write to your home directory. A `dir` inside
+[`tempdir()`](https://rdrr.io/r/base/tempfile.html) is written without
+asking, since the session takes it away again.
+
 ## See also
 
 [`blind_file()`](https://agallinat.github.io/datablinder/reference/blind_file.md),
@@ -53,12 +62,12 @@ for the same job in a browser.
 # Into a scratch directory, to show what is written:
 dir <- file.path(tempdir(), "bin")
 install_cli(dir)
-#> The datablinder command is installed in /tmp/RtmpnCwL1e/bin,
+#> The datablinder command is installed in /tmp/RtmpI2REha/bin,
 #> which is not on your PATH, so the shell will not find it by name yet.
 #> It works by its full path right away:
-#>   "/tmp/RtmpnCwL1e/bin/datablinder" --help
+#>   "/tmp/RtmpI2REha/bin/datablinder" --help
 #> For the short name, add that folder to your PATH:
-#>   echo 'export PATH="/tmp/RtmpnCwL1e/bin:$PATH"' >> ~/.zshrc
+#>   echo 'export PATH="/tmp/RtmpI2REha/bin:$PATH"' >> ~/.zshrc
 #>   (~/.bashrc for bash), then open a new terminal and check with:
 #>   echo $PATH
 list.files(dir)

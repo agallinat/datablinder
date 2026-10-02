@@ -240,7 +240,13 @@ says whether the directory it used is on the user’s PATH and what to add
 if it is not. The default directory is the first of `~/.local/bin`,
 `~/bin`, `/usr/local/bin` that is on the PATH and writable, and a folder
 under `LOCALAPPDATA` on Windows. No `sudo`, and no shell configuration
-file is ever edited by the package.
+file is ever edited by the package. Being the only function that writes
+a file that outlives the session, it asks before it writes: it prints
+the directory and waits for `y`, and any other answer writes nothing,
+not even the directory. Called where there is nobody to ask it is an
+error, not a silent write to the user’s home directory. A `dir` inside
+[`tempdir()`](https://rdrr.io/r/base/tempfile.html) is written without
+asking, which is what the examples and the tests use.
 
 The README leads with the setup-free alternative,
 `Rscript -e 'datablinder::blind_file("patients.csv")'`, which works

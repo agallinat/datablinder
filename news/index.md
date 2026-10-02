@@ -64,7 +64,13 @@ First public release.
   where it can, writes the `.cmd` shim Windows needs, and says plainly
   whether the shell will find the command and what to add to the `PATH`
   if it will not. It needs no `sudo` and never edits a shell
-  configuration file.
+  configuration file. It is the only function here that writes a file
+  outliving the session, so it asks first: it prints the directory and
+  waits for `y`, and any other answer writes nothing, not even the
+  directory. Where there is nobody to ask, in a script or `Rscript -e`,
+  it is an error rather than a silent write to a home directory. A `dir`
+  inside [`tempdir()`](https://rdrr.io/r/base/tempfile.html) needs no
+  permission, since the session takes it away again.
 
 - A README that leads with the one promise the package makes, shows the
   three ways to run it, and says plainly in a *Limits* section what the
