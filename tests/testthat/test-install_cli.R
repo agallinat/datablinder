@@ -19,6 +19,23 @@ with_windows <- function(code) {
   code
 }
 
+# Run code as if the scratch directory outlived the session. A test may not
+# write outside tempdir(), so consent has to be exercised on a directory that
+# is inside it while the package is told otherwise.
+as_permanent <- function(code) {
+  local_mocked_bindings(db_under_tempdir = function(dir) FALSE)
+  code
+}
+
+# Run code with somebody at the console giving one answer to anything asked.
+answering <- function(answer, code) {
+  local_mocked_bindings(
+    db_is_interactive = function() TRUE,
+    db_ask_yes_no = function(question) answer
+  )
+  code
+}
+
 # Installing -------------------------------------------------------------
 
 test_that("the command is copied into the directory, which is created", {
@@ -71,6 +88,78 @@ test_that("a path that is a file, not a directory, is an error", {
   writeLines("x", file)
 
   expect_error(install_cli(file), "Could not create the directory")
+})
+
+# Consent ----------------------------------------------------------------
+
+test_that("a directory that outlives the session is written to only on a yes", {
+  dir <- cli_dir()
+
+  target <- as_permanent(answering(TRUE, suppressMessages(install_cli(dir))))
+
+  expect_equal(target, file.path(dir, "datablinder"))
+  expect_true(file.exists(target))
+})
+
+test_that("a no writes nothing at all, not even the directory", {
+  dir <- cli_dir()
+
+  expect_message(
+    expect_null(as_permanent(answering(FALSE, install_cli(dir)))),
+    "Nothing was written"
+  )
+  expect_false(dir.exists(dir))
+})
+
+test_that("the question says which directory would be written to", {
+  dir <- cli_dir()
+  asked <- NULL
+  local_mocked_bindings(
+    db_is_interactive = function() TRUE,
+    db_ask_yes_no = function(question) {
+      asked <<- question
+      FALSE
+    }
+  )
+
+  as_permanent(suppressMessages(install_cli(dir)))
+
+  expect_match(asked, dir, fixed = TRUE)
+})
+
+test_that("with nobody to ask, writing outside tempdir() is an error", {
+  dir <- cli_dir()
+  local_mocked_bindings(
+    db_is_interactive = function() FALSE,
+    db_ask_yes_no = function(question) stop("should not have asked")
+  )
+
+  expect_error(as_permanent(install_cli(dir)), "only runs where it can ask")
+  expect_false(dir.exists(dir))
+})
+
+test_that("a directory under tempdir() is written without asking", {
+  dir <- cli_dir()
+  local_mocked_bindings(
+    db_is_interactive = function() TRUE,
+    db_ask_yes_no = function(question) stop("should not have asked")
+  )
+
+  expect_true(file.exists(suppressMessages(install_cli(dir))))
+})
+
+test_that("a directory under tempdir() is recognised before it exists", {
+  dir <- cli_dir("not-yet")
+  expect_false(dir.exists(dir))
+
+  expect_true(db_under_tempdir(dir))
+  expect_true(db_under_tempdir(tempdir()))
+  expect_false(db_under_tempdir(file.path("~", ".local", "bin")))
+})
+
+test_that("only a yes is a yes, and a bare return key is not", {
+  expect_true(all(vapply(c("y", "Y", " yes "), db_is_yes, logical(1))))
+  expect_false(any(vapply(c("n", "", "maybe"), db_is_yes, logical(1))))
 })
 
 # What the user is told --------------------------------------------------

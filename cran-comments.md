@@ -20,23 +20,31 @@ This is a new submission.
 
 Three things in this package are worth explaining up front.
 
-**`install_cli()` writes outside the session temporary directory.** That is the
-function's entire purpose: it copies a command line script out of the installed
-package into a directory on the user's `PATH`, so that a file can be blinded
-with `datablinder patients.csv` instead of a line of R. It only ever runs when
-the user calls it by name, and the package does nothing at load time, in any
-other function, or on attach that writes anywhere. Nothing needs to be installed
-to use the package from a terminal, which the help page says before it describes
-the function: `Rscript -e 'datablinder::blind_file("patients.csv")'` works as
-soon as the package does.
+**`install_cli()` writes outside the session temporary directory, and asks the
+user first.** That is the function's entire purpose: it copies a command line
+script out of the installed package into a directory on the user's `PATH`, so
+that a file can be blinded with `datablinder patients.csv` instead of a line of
+R.
+
+Per the policy on the user's home filespace, it writes only with confirmation:
+in an interactive session it prints the directory it would write to and waits
+for `y`, and any other answer writes nothing, not even the directory. Where
+there is nobody to ask, it is an error rather than a silent write. A `dir` inside
+`tempdir()` is the only case it writes without asking, which is what the example
+and the tests use, so neither the examples nor the tests write anywhere outside
+`tempdir()`.
+
+Nothing needs to be installed to use the package from a terminal, which the help
+page says before it describes the function:
+`Rscript -e 'datablinder::blind_file("patients.csv")'` works as soon as the
+package does. The package writes nothing at load time, on attach, or in any
+other function.
 
 The default directory is the first of `~/.local/bin`, `~/bin` and
 `/usr/local/bin` that is already on the `PATH` and writable, or a folder under
 `LOCALAPPDATA` on Windows. It never uses `sudo`, never edits a shell
 configuration file, and prints the path it wrote to along with whether the shell
-will find the command there. `dir` lets the caller choose somewhere else, and
-the example passes a path under `tempdir()`, so running the examples writes
-nothing to the user's filespace.
+will find the command there.
 
 **The package is about sharing data with AI assistants, but makes no network
 requests of any kind.** There are no calls to any web service, model API or

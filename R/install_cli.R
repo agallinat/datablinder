@@ -43,9 +43,17 @@ db_cli_dirs <- function() {
 #' so upgrading `datablinder` upgrades the command too. Run this again after
 #' upgrading R itself, which moves the `Rscript` the Windows shim points at.
 #'
+#' This is the only function in the package that writes a file anywhere
+#' permanent, so it asks before it does: it prints the directory and waits for
+#' `y`. Any other answer writes nothing, not even the directory. Called where
+#' there is nobody to ask, in a script or `Rscript -e`, it is an error rather
+#' than a silent write to your home directory. A `dir` inside `tempdir()` is
+#' written without asking, since the session takes it away again.
+#'
 #' @param dir Where to put the command. `NULL` picks a sensible place.
 #'
-#' @return The path of the installed command, invisibly.
+#' @return The path of the installed command, invisibly, or `NULL` invisibly if
+#'   you decline.
 #'
 #' @seealso [blind_file()], which the command calls, and [run_app()] for the
 #'   same job in a browser.
@@ -59,6 +67,10 @@ install_cli <- function(dir = NULL) {
   script <- db_cli_script()
   if (is.null(dir)) {
     dir <- db_cli_dir()
+  }
+  if (!db_cli_consent(path.expand(dir))) {
+    message("Nothing was written.")
+    return(invisible(NULL))
   }
   dir <- db_cli_make_dir(dir)
 
@@ -74,6 +86,50 @@ install_cli <- function(dir = NULL) {
 
   message(paste(db_cli_notes(dir, target), collapse = "\n"))
   invisible(target)
+}
+
+# Consent ----------------------------------------------------------------
+
+# A file that outlives the session is the user's to allow, so it is asked for
+# and not assumed from the call. The temporary directory is the exception: the
+# session created it and will take it away, which is where the examples and the
+# tests write.
+db_cli_consent <- function(dir) {
+  if (db_under_tempdir(dir)) {
+    return(TRUE)
+  }
+  if (!db_is_interactive()) {
+    stop(
+      "install_cli() would write to ", dir, ", which outlives this session, ",
+      "so it only runs where it can ask first.\n",
+      "Run it from an R console, or skip it: ",
+      "Rscript -e 'datablinder::blind_file(\"patients.csv\")' needs nothing ",
+      "installed.",
+      call. = FALSE
+    )
+  }
+  db_ask_yes_no(paste0("Install the datablinder command in ", dir, "?"))
+}
+
+# Through functions of our own, so that the tests can answer and the examples
+# never stop for an answer.
+db_is_interactive <- function() {
+  interactive()
+}
+
+db_ask_yes_no <- function(question) {
+  db_is_yes(readline(paste0(question, " (y/N) ")))
+}
+
+# Silence is no, so that a stray return key does not install anything.
+db_is_yes <- function(answer) {
+  tolower(trimws(answer)) %in% c("y", "yes")
+}
+
+db_under_tempdir <- function(dir) {
+  temp <- db_real_path(tempdir())
+  dir <- db_real_path(dir)
+  identical(dir, temp) || startsWith(dir, paste0(temp, "/"))
 }
 
 db_cli_script <- function() {
@@ -176,6 +232,21 @@ db_comparable_path <- function(paths) {
   normal <- normalizePath(path.expand(paths), winslash = "/", mustWork = FALSE)
   normal <- sub("/$", "", normal)
   if (db_is_windows()) tolower(normal) else normal
+}
+
+# The same, for one directory that may not exist yet: normalise as much of it as
+# does and keep the rest. Without this a directory under tempdir() that has not
+# been created compares unequal to tempdir() itself, because macOS resolves
+# /var to /private/var only for a path that is there.
+db_real_path <- function(dir) {
+  existing <- path.expand(dir)
+  rest <- character()
+  while (!file.exists(existing) && dirname(existing) != existing) {
+    rest <- c(basename(existing), rest)
+    existing <- dirname(existing)
+  }
+  full <- paste(c(db_comparable_path(existing), rest), collapse = "/")
+  if (db_is_windows()) tolower(full) else full
 }
 
 # A directory can be written to if it exists and is writable, or if it does not

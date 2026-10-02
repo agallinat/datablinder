@@ -10,7 +10,8 @@ install_cli(dir = NULL)
 \item{dir}{Where to put the command. \code{NULL} picks a sensible place.}
 }
 \value{
-The path of the installed command, invisibly.
+The path of the installed command, invisibly, or \code{NULL} invisibly if
+you decline.
 }
 \description{
 Copies the command line wrapper out of the installed package and into a
@@ -34,6 +35,13 @@ will not.
 The command is a copy, but it holds no logic: it calls the installed package,
 so upgrading \code{datablinder} upgrades the command too. Run this again after
 upgrading R itself, which moves the \code{Rscript} the Windows shim points at.
+
+This is the only function in the package that writes a file anywhere
+permanent, so it asks before it does: it prints the directory and waits for
+\code{y}. Any other answer writes nothing, not even the directory. Called where
+there is nobody to ask, in a script or \code{Rscript -e}, it is an error rather
+than a silent write to your home directory. A \code{dir} inside \code{tempdir()} is
+written without asking, since the session takes it away again.
 }
 \examples{
 # Into a scratch directory, to show what is written:
