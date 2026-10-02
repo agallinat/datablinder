@@ -1,0 +1,11 @@
+## The version is read from DESCRIPTION, so that citation() never disagrees with
+## the installed package.
+
+bibentry(
+  bibtype = "Manual",
+  title   = "{datablinder}: Synthetic Look-Alike Copies of Sensitive Data Files",
+  author  = person("Alex", "Gallinat"),
+  year    = "2026",
+  note    = sprintf("R package version %s", meta$Version),
+  url     = "https://agallinat.github.io/datablinder/"
+)

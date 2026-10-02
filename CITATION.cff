@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "datablinder: Synthetic Look-Alike Copies of Sensitive Data Files"
+abstract: >-
+  An R package that replaces the contents of a sensitive or proprietary data file
+  with synthetic values while keeping the columns, classes, formats and file type
+  identical, so that analysis code written against the anonymised copy runs
+  unchanged on the real data. Intended for sharing the structure of a dataset
+  with a collaborator or a large language model assistant without sharing its
+  contents. It reduces disclosure risk and offers no formal privacy guarantee.
+authors:
+  - family-names: Gallinat
+    given-names: Alex
+    email: baloo.142@gmail.com
+version: 0.1.0
+date-released: "2026-09-30"
+license: MIT
+repository-code: "https://github.com/agallinat/datablinder"
+url: "https://agallinat.github.io/datablinder/"
+keywords:
+  - R
+  - synthetic data
+  - data privacy
+  - anonymisation
+  - statistical disclosure control
+  - large language models
+  - reproducible research
